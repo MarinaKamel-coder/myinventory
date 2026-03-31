@@ -46,19 +46,22 @@ flutter test
 
 ---
 
-## 📂 Structure du projet
+## 📂 Structure du projet (Feature-First)
 
-Le projet suit une structure modulaire pour faciliter le travail d'équipe :
+Le projet utilise une architecture **Feature-First** pour assurer la modularité et faciliter le travail en équipe :
 
 ```text
 lib/
 ├── main.dart             # Point d'entrée de l'application
-└── src/
-    ├── models/           # Classes de données (Box, Item, Room)
-    ├── views/            # Écrans complets (Home, Create, Scan)
-    ├── widgets/          # Composants UI réutilisables
-    ├── services/         # Logique métier (Base de données, PDF)
-    └── theme/            # Configuration Material 3
+├── app/                  # Configuration globale (app, routes)
+├── shared/               # Composants et utilitaires partagés
+│   ├── theme/            # Couleurs, textes et thèmes (Material 3)
+│   ├── widgets/          # UI réutilisable (boutons, headers, cards)
+│   └── utils/            # Constantes (spacing, etc.)
+└── features/             # Dossiers par domaine fonctionnel
+    ├── home/             # Écran d'accueil et statistiques
+    ├── cartons/          # Gestion des cartons (modèles, formulaires)
+    └── scanner/          # Interface de scan QR Code
 ```
 
 ---
