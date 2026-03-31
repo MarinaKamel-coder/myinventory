@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supermoms/features/cartons/models/carton.dart';
-import 'package:supermoms/features/cartons/models/room.dart';
+import 'package:supermoms/src/models/carton.dart';
+import 'package:supermoms/src/models/room.dart';
 
 void main() {
   final now = DateTime.now();

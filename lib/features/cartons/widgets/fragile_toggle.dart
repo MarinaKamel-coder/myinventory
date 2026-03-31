@@ -4,7 +4,5 @@ class FragileToggle extends StatelessWidget {
   const FragileToggle({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const SizedBox();
-  }
+  Widget build(BuildContext context) => const SizedBox();
 }

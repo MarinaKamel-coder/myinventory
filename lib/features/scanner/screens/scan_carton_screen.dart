@@ -4,7 +4,5 @@ class ScanCartonScreen extends StatelessWidget {
   const ScanCartonScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold();
-  }
+  Widget build(BuildContext context) => const Scaffold();
 }

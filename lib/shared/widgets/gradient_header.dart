@@ -4,7 +4,5 @@ class GradientHeader extends StatelessWidget {
   const GradientHeader({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const SizedBox.shrink();
-  }
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }

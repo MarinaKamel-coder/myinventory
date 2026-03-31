@@ -4,7 +4,5 @@ class FragileChip extends StatelessWidget {
   const FragileChip({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Chip(label: Text('Fragile'));
-  }
+  Widget build(BuildContext context) => const Chip(label: Text('Fragile'));
 }

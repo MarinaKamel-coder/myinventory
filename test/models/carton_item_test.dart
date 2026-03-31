@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supermoms/features/cartons/models/carton_item.dart';
+import 'package:supermoms/src/models/carton_item.dart';
 
 void main() {
   test('CartonItem copyWith updates fields', () {
