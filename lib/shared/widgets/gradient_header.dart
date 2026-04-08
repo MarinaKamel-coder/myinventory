@@ -16,7 +16,7 @@ class GradientHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: height,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: AppColors.mainGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(40),
