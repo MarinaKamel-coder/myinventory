@@ -26,4 +26,11 @@ class AppColors {
   static const Color textSecondary = Color(0xFF6E7581);
   static const Color surface       = Color(0xFFEBEFF5); 
   static const Color white         = Colors.white;
+
+  // Dégradés réutilisables
+  static const LinearGradient mainGradient = LinearGradient(
+    colors: [headerStart, headerEnd],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 }
