@@ -4,7 +4,5 @@ class AppSearchField extends StatelessWidget {
   const AppSearchField({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const TextField();
-  }
+  Widget build(BuildContext context) => const TextField();
 }

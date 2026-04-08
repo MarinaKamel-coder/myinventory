@@ -4,7 +4,5 @@ class ScanHowToCard extends StatelessWidget {
   const ScanHowToCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Card();
-  }
+  Widget build(BuildContext context) => const Card();
 }

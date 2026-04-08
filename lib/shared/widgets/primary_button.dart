@@ -4,7 +4,5 @@ class PrimaryButton extends StatelessWidget {
   const PrimaryButton({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(onPressed: () {}, child: const SizedBox());
-  }
+  Widget build(BuildContext context) => ElevatedButton(onPressed: () {}, child: const SizedBox());
 }
