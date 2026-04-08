@@ -4,7 +4,8 @@ class AppColors {
   // Dégradé du Header (Indigo -> Purple -> Pink)
   static const Color headerStart = Color(0xFF565CF2); 
   static const Color headerMid   = Color(0xFF9249EB);
-  static const Color headerEnd   = Color(0xFFE8179B); 
+  static const Color headerEnd   = Color(0xFFE8179B);
+
 
   // Couleurs de fond (Très claires)
   static const Color bgStart = Color(0xFFDEE6FF); 
