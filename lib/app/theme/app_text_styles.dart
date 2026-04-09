@@ -23,4 +23,24 @@ class AppTextStyles {
     fontWeight: FontWeight.bold,
     color: AppColors.textMain,
   );
+  // Le style pour les chiffres des statistiques (Ex: "12 cartons")
+  static const TextStyle statsNumber = TextStyle(
+    fontSize: 26.0,
+    fontWeight: FontWeight.bold,
+    color: AppColors.white,
+  );
+
+  // Utilisé pour les labels secondaires
+  static const TextStyle bodySmall = TextStyle(
+    fontSize: 12.0,
+    color: AppColors.textSecondary,
+  );
+
+  // Titre de section "Derniers cartons"
+  static const TextStyle cardTitle = TextStyle(
+    fontSize: 20.0,
+    fontWeight: FontWeight.bold,
+    color: AppColors.textMain,
+  );
+
 }
