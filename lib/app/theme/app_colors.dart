@@ -5,6 +5,7 @@ class AppColors {
   static const Color headerStart = Color(0xFF565CF2); 
   static const Color headerMid   = Color(0xFF9249EB);
   static const Color headerEnd   = Color(0xFFE8179B);
+  // Dégradés réutilisables
   static const LinearGradient mainGradient = LinearGradient(
     colors: [
       headerStart,
@@ -36,10 +37,10 @@ class AppColors {
   static const Color surface       = Color(0xFFEBEFF5); 
   static const Color white         = Colors.white;
 
-  // Dégradés réutilisables
+  /* Dégradés réutilisables
   static const LinearGradient mainGradient = LinearGradient(
     colors: [headerStart, headerEnd],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-  );
+  );*/
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 
 
@@ -16,7 +17,7 @@ class GradientHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       height: height,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: AppColors.mainGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(40),
