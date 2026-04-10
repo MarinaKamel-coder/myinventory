@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 
 class HomeEmptyState extends StatelessWidget {
-  final VoidCallback onAddPressed;
-
   const HomeEmptyState({
-    super.key,
     required this.onAddPressed,
+    super.key,
   });
+
+  final VoidCallback onAddPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class HomeEmptyState extends StatelessWidget {
             // 1. Une icône ou une image illustrative
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.bgMid,
                 shape: BoxShape.circle,
               ),

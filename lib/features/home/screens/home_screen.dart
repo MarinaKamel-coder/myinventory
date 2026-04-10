@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
-import 'package:supermoms/features/cartons/widgets/box_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,11 +9,9 @@ class HomeScreen extends StatelessWidget {
     final theme = Theme.of(context);
     
     return Scaffold(
-      // Pas de AppBar pour laisser le Header personnalisé
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header simulé avec un dégradé (pour tester vos couleurs)
             Container(
               width: double.infinity,
               padding: const EdgeInsets.only(top: 80, bottom: 40, left: 24, right: 24),
@@ -46,9 +43,8 @@ class HomeScreen extends StatelessWidget {
                 children: [
                   Text('Mes Cartons récents', style: theme.textTheme.titleLarge),
                   const SizedBox(height: 16),
-                  // Carte de test pour valider CardTheme
-                  Card(
-                    child: const ListTile(
+                  const Card(
+                    child: ListTile(
                       leading: Icon(Icons.inventory_2, color: AppColors.headerMid),
                       title: Text('Cuisine - Fragile'),
                       subtitle: Text('12 objets'),

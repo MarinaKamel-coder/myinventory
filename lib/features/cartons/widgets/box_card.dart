@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 
 class BoxCard extends StatelessWidget {
-  final String title;
-  final int itemCount;
-  final VoidCallback onTap;
-
   const BoxCard({
-    super.key,
     required this.title,
     required this.itemCount,
     required this.onTap,
+    super.key,
   });
+
+  final String title;
+  final int itemCount;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,7 @@ class BoxCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4.0),
                     Text(
-                      'Nombre d\'objets : $itemCount',
+                      "Nombre d'objets : $itemCount",
                       style: theme.textTheme.bodyMedium,
                     ),
                   ],

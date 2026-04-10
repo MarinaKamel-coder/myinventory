@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 
 class ItemTile extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final String? imageUrl;
-  final int? quantity;
-
   const ItemTile({
-    super.key,
     required this.title,
+    super.key,
     this.subtitle,
     this.imageUrl,
     this.quantity,
   });
+
+  final String title;
+  final String? subtitle;
+  final String? imageUrl;
+  final int? quantity;
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +23,11 @@ class ItemTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: const Color(0xFFFDF8FF), // Fond très clair comme sur l'image
+        color: const Color(0xFFFDF8FF),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          // ÉLÉMENT DE GAUCHE (Image ou Dégradé avec Nombre)
           Container(
             width: 60,
             height: 60,
@@ -36,12 +35,11 @@ class ItemTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ],
-              // Dégradé si pas d'image
               gradient: imageUrl == null
                   ? const LinearGradient(
                       colors: [AppColors.fabStart, AppColors.fabEnd],
@@ -70,8 +68,6 @@ class ItemTile extends StatelessWidget {
                 : null,
           ),
           const SizedBox(width: 16),
-          
-          // TEXTES (Titre et Sous-titre dans sa bulle)
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,7 +84,7 @@ class ItemTile extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
