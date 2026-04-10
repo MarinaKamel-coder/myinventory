@@ -18,28 +18,37 @@ MyInventory est une application mobile conçue pour simplifier l'organisation et
 ## 🛠 Installation et Lancement
 
 ### Prérequis
+
 - Flutter SDK (dernière version stable)
 - Android Studio / VS Code avec extensions Flutter & Dart
 - Un émulateur ou un appareil physique
 
 ### Installation
+
 1. Cloner le repository :
+
    ```bash
    git clone https://github.com/H26-DAM2/supermoms.git
    ```
+
 2. Récupérer les dépendances :
+
    ```bash
    flutter pub get
    ```
 
 ### Lancement
+
 Pour lancer l'application en mode debug :
+
 ```bash
 flutter run
 ```
 
 ### Tests
+
 Pour exécuter les tests unitaires et de widgets :
+
 ```bash
 flutter test
 ```
@@ -52,16 +61,25 @@ Le projet utilise une architecture **Feature-First** pour assurer la modularité
 
 ```text
 lib/
-├── main.dart             # Point d'entrée de l'application
-├── app/                  # Configuration globale (app, routes)
-├── shared/               # Composants et utilitaires partagés
-│   ├── theme/            # Couleurs, textes et thèmes (Material 3)
-│   ├── widgets/          # UI réutilisable (boutons, headers, cards)
-│   └── utils/            # Constantes (spacing, etc.)
-└── features/             # Dossiers par domaine fonctionnel
-    ├── home/             # Écran d'accueil et statistiques
-    ├── cartons/          # Gestion des cartons (modèles, formulaires)
-    └── scanner/          # Interface de scan QR Code
+├── app/
+│   └── theme/
+│       ├── app_colors.dart      //  les dégradés et palettes
+│       ├── app_text_styles.dart  // les styles (headerTitle, statsNumber, etc.)
+│       └── app_theme.dart        // Configuration ThemeData (Material 3)
+├── shared/
+│   └── widgets/
+│       └── gradient_header.dart  // Widget réutilisable pour le haut de page
+|       └── primary_button.dart  // Widget réutilisable pour le scan bouton
+├── src/
+│   ├── Data/
+│   │   └── data.dart             // MockData (les listes de cartons d'exemple)
+│   ├── models/
+│   │   ├── carton.dart           // Classe Carton
+│   │   ├── carton_item.dart      // Classe CartonItem
+│   │   └── room.dart             // Enum Room (Cuisine, Salon, etc.)
+│   └── screens/
+│       └── home_screen.dart      // écran principal
+└── main.dart                     // Point d'entrée avec MaterialApp
 ```
 
 ---
@@ -69,13 +87,17 @@ lib/
 ## 🤝 Conventions de l'équipe
 
 ### Nommage des branches
+
 Nous utilisons le format suivant : `type/id-description-courte`
+
 - `feature/` : Nouvelle fonctionnalité (ex: `feature/us2-readme-config`)
 - `fix/` : Correction de bug
 - `chore/` : Tâches de maintenance ou config
 
 ### Conventions de Commits
+
 Nous suivons les [Conventional Commits](https://www.conventionalcommits.org/) :
+
 - `feat:` : Ajout d'une fonctionnalité
 - `fix:` : Correction d'un bug
 - `docs:` : Modification de la documentation
@@ -83,7 +105,9 @@ Nous suivons les [Conventional Commits](https://www.conventionalcommits.org/) :
 - `chore:` : Mise à jour des tâches build, packages, etc.
 
 ### Qualité de code
+
 Avant chaque push, assurez-vous de passer l'analyse :
+
 ```bash
 flutter analyze
 dart format .
@@ -92,6 +116,7 @@ dart format .
 ---
 
 ## 📊 Données & Technologie
+
 - **Stockage** : Local (Hive ou Isar) pour un accès offline.
 - **UI** : Flutter Material 3.
 - **Génération PDF** : Package `pdf`.
