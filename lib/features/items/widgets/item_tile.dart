@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 
 class ItemTile extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final String? imageUrl;
-  final int? quantity;
-
   const ItemTile({
-    super.key,
     required this.title,
+    super.key,
     this.subtitle,
     this.imageUrl,
     this.quantity,
   });
+
+  final String title;
+  final String? subtitle;
+  final String? imageUrl;
+  final int? quantity;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +36,7 @@ class ItemTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -88,7 +88,7 @@ class ItemTile extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

@@ -47,10 +47,10 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 20),
 
               // 2. BARRE DE RECHERCHE (Stylisée via InputDecorationTheme)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.0),
                 child: TextField(
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Rechercher un carton ou un objet...',
                     prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
                   ),
