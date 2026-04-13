@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
+import 'package:supermoms/features/cartons/screens/carton_detail_screen.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/Data/data.dart';
 
@@ -100,11 +101,19 @@ class HomeScreen extends StatelessWidget {
               ),
 
               ...MockData.boxes.map((box) => _buildCartonItem(
-                  box.name,
-                  box.room.label,
-                  box.items.length,
-                  box.fragile 
-              )),
+                    box.name,
+                    box.room.label,
+                    box.items.length,
+                    box.fragile,
+                    () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (context) => CartonDetailScreen(box: box),
+                        ),
+                      );
+                    },
+                  )),
 
               const SizedBox(height: 120),
             ],
@@ -182,10 +191,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCartonItem(String title, String roomLabel, int itemsCount, bool isFragile) {
+  Widget _buildCartonItem(String title, String roomLabel, int itemsCount, bool isFragile, VoidCallback onTap) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: ListTile(
+        onTap: onTap,
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
