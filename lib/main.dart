@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_theme.dart';
 import 'package:supermoms/features/cartons/screens/carton_form_screen.dart';
 import 'package:supermoms/features/home/screens/home_screen.dart';
 import 'package:supermoms/features/scanner/screens/scan_carton_screen.dart';
+import 'package:supermoms/src/provider/carton_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyInventoryApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CartonProvider(),
+      child: const MyInventoryApp(),
+    ),
+  );
 }
 
 class MyInventoryApp extends StatelessWidget {
