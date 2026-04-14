@@ -1,29 +1,30 @@
 // ignore_for_file: deprecated_member_use, prefer_expression_function_bodies
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
 import 'package:supermoms/features/cartons/screens/carton_detail_screen.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
-import 'package:supermoms/src/Data/data.dart';
+import 'package:supermoms/src/providers/carton_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Utilisation du thème global pour les textes
     final theme = Theme.of(context);
+    
+    // On écoute le Provider pour avoir les données réelles (pas les mocks)
+    final cartons = context.watch<CartonProvider>().cartons;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        // Utilise la couleur de fond définie dans AppTheme
         backgroundColor: theme.scaffoldBackgroundColor,
         body: SingleChildScrollView(
           child: Column(
             children: [
-              // 1. EN-TÊTE AVEC TON NOUVEAU DÉGRADÉ (headerStart -> headerMid -> headerEnd)
               GradientHeader(
                 height: 300,
                 child: SafeArea(
@@ -38,7 +39,7 @@ class HomeScreen extends StatelessWidget {
                           style: theme.textTheme.headlineMedium,
                         ),
                         const SizedBox(height: 25),
-                        _buildProgressSection(),
+                        _buildProgressSection(cartons.length),
                       ],
                     ),
                   ),
@@ -47,7 +48,6 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // 2. BARRE DE RECHERCHE (Stylisée via InputDecorationTheme)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.0),
                 child: TextField(
@@ -60,14 +60,13 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // 3. CARTES DE STATISTIQUES
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Row(
                   children: [
                     Expanded(
                       child: _buildStatCard(
-                        '${MockData.boxes.length}',
+                        '${cartons.length}',
                         'CARTONS',
                         AppColors.statsBlue,
                         Icons.inventory_2_outlined,
@@ -76,7 +75,7 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(width: 15),
                     Expanded(
                       child: _buildStatCard(
-                        '${MockData.boxes.where((b) => b.fragile).length}',
+                        '${cartons.where((b) => b.fragile).length}',
                         'FRAGILES',
                         AppColors.statsOrange,
                         Icons.warning_amber_rounded,
@@ -88,7 +87,6 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 25),
 
-              // 4. LISTE DYNAMIQUE DES CARTONS
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Row(
@@ -100,7 +98,8 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
 
-              ...MockData.boxes.map((box) => _buildCartonItem(
+              // LISTE DYNAMIQUE (Vraies données)
+              ...cartons.map((box) => _buildCartonItem(
                     box.name,
                     box.room.label,
                     box.items.length,
@@ -120,21 +119,39 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
 
-        // 5. BOUTONS FLOTTANTS
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            FloatingActionButton(
-              heroTag: 'scan_fab',
-              onPressed: () => Navigator.pushNamed(context, '/scanner'),
-              backgroundColor: AppColors.white,
-              child: const Icon(Icons.qr_code_scanner, color: AppColors.headerMid),
+            // --- BOUTON SCAN AVEC ANIMATION ÉLASTIQUE ---
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 1000),
+              curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
+              builder: (context, value, child) => Transform.scale(
+                scale: value,
+                child: FloatingActionButton(
+                  heroTag: 'scan_fab',
+                  onPressed: () => Navigator.pushNamed(context, '/scanner'),
+                  backgroundColor: AppColors.white,
+                  child: const Icon(Icons.qr_code_scanner, color: AppColors.headerMid),
+                ),
+              ),
             ),
             const SizedBox(height: 15),
-            FloatingActionButton.large(
-              heroTag: 'add_fab',
-              onPressed: () => Navigator.pushNamed(context, '/add_carton'),
-              child: const Icon(Icons.add, size: 40),
+
+            // --- BOUTON + AVEC ANIMATION ÉLASTIQUE ---
+            TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) => Transform.scale(
+                scale: value,
+                child: FloatingActionButton.large(
+                  heroTag: 'add_fab',
+                  onPressed: () => Navigator.pushNamed(context, '/add_carton'),
+                  child: const Icon(Icons.add, size: 40),
+                ),
+              ),
             ),
           ],
         ),
@@ -144,7 +161,7 @@ class HomeScreen extends StatelessWidget {
 
   // --- WIDGETS DE CONSTRUCTION ---
 
-  Widget _buildProgressSection() {
+  Widget _buildProgressSection(int total) {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -158,7 +175,7 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Progression', style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold)),
-              Text('${MockData.boxes.length} cartons', style: const TextStyle(color: AppColors.white, fontSize: 12)),
+              Text('$total cartons', style: const TextStyle(color: AppColors.white, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 10),
