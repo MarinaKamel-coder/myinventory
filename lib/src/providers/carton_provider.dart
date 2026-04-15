@@ -1,33 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:supermoms/src/Data/data.dart';
+import 'package:supermoms/src/Data/data.dart'; // Pour importer les données initiales
 import 'package:supermoms/src/models/carton.dart';
-import 'package:supermoms/src/models/carton_item.dart';
+
 
 class CartonProvider extends ChangeNotifier {
-  // Initialisation avec les données de test
-  final List<Carton> _cartons = List<Carton>.from(MockData.boxes);
+  // Liste privée pour encapsuler les données
+  final List<Carton> _cartons = [...MockData.boxes];
 
-  // Getter pour accéder à la liste
+
+
+  // --- GETTERS POUR L'INTERFACE UTILISATEUR ---
+
+  // Getter pour lire tous les cartons depuis l'UI
   List<Carton> get cartons => _cartons;
 
-  // Ajouter un nouveau carton
+  // Getter pour le compteur total de cartons (utilisé dans les stats)
+  int get totalCartons => _cartons.length;
+
+  // Getter pour le nombre de cartons fragiles
+  int get fragileCount => _cartons.where((c) => c.fragile).length;
+
+  // --- MÉTHODES CRUD POUR LES CARTONS ---
+
+  // 1. GET ALL CARTONS (Déjà couvert par le getter 'cartons', mais on peut aussi créer une méthode si besoin de filtrer plus tard)
+  List<Carton> getAllCartons() => _cartons;
+
+  // 2. AJOUTER UN CARTON
   void addCarton(Carton newCarton) {
-    _cartons.insert(0, newCarton);
-    notifyListeners();
+    _cartons.insert(0, newCarton); // Ajoute au début pour qu'il soit en haut de liste
+    notifyListeners(); // Crucial pour mettre à jour l'UI instantanément
   }
 
-  // Ajouter un objet dans un carton spécifique
-  void addItemToCarton(String cartonId, CartonItem item) {
-    final index = _cartons.indexWhere((c) => c.id == cartonId);
-    if (index != -1) {
-      _cartons[index].items.add(item);
-      notifyListeners();
-    }
-  }
-
-  // Supprimer un carton
+  // 3. SUPPRIMER UN CARTON
   void removeCarton(String cartonId) {
     _cartons.removeWhere((c) => c.id == cartonId);
     notifyListeners();
+  }
+
+  // 4. MODIFIER UN CARTON
+  void updateCarton(Carton updatedCarton) {
+    final index = _cartons.indexWhere((c) => c.id == updatedCarton.id);
+
+    if (index != -1) {
+      _cartons[index] = updatedCarton;
+      notifyListeners();
+    }
   }
 }

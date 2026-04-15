@@ -6,6 +6,7 @@ import 'package:supermoms/app/theme/app_text_styles.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
+import 'package:supermoms/src/providers/item_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 
 class CartonDetailScreen extends StatelessWidget {
@@ -15,7 +16,11 @@ class CartonDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final itemProvider = context.watch<ItemProvider>();
     final currentBox = context.watch<CartonProvider>().cartons.firstWhere((c) => c.id == box.id, orElse: () => box);
+    
+    // Récupérer les items du carton depuis le nouveau provider
+    final items = itemProvider.getItemsByCartonId(currentBox.id);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
@@ -51,7 +56,7 @@ class CartonDetailScreen extends StatelessWidget {
                   const SizedBox(height: 25),
                   _buildInfoSection(currentBox),
                   const SizedBox(height: 25),
-                  _buildContentSection(context, currentBox),
+                  _buildContentSection(context, currentBox, items),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -171,21 +176,21 @@ class CartonDetailScreen extends StatelessWidget {
         ),
       );
 
-  Widget _buildContentSection(BuildContext context, Carton box) => Container(
+  Widget _buildContentSection(BuildContext context, Carton box, List<CartonItem> items) => Container(
         decoration: _cardDecoration(),
         child: Column(
           children: [
-            _buildSectionHeader('Contenu du carton (${box.items.length})', Icons.inventory, const Color(0xFFF06292)),
-            if (box.items.isEmpty)
+            _buildSectionHeader('Contenu du carton (${items.length})', Icons.inventory, const Color(0xFFF06292)),
+            if (items.isEmpty)
               const Padding(padding: EdgeInsets.all(30), child: Text('Aucun objet', style: TextStyle(color: Colors.grey)))
             else
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: box.items.length,
+                itemCount: items.length,
                 separatorBuilder: (context, index) => const Divider(height: 1),
                 itemBuilder: (context, index) {
-                  final item = box.items[index];
+                  final item = items[index];
                   return ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
@@ -295,8 +300,15 @@ class CartonDetailScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                final newItem = CartonItem(id: DateTime.now().toString(), cartonId: cartonId, name: nameController.text, description: descController.text);
-                context.read<CartonProvider>().addItemToCarton(cartonId, newItem);
+                final newItem = CartonItem(
+                  id: DateTime.now().toString(),
+                  cartonId: cartonId,
+                  name: nameController.text,
+                  description: descController.text,
+                );
+                
+                context.read<ItemProvider>().addItem(newItem);
+
                 Navigator.pop(context);
               }
             },

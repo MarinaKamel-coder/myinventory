@@ -5,6 +5,7 @@ import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/models/room.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
+import 'package:supermoms/src/providers/item_provider.dart';
 
 class ItemAddGlobalScreen extends StatefulWidget {
   const ItemAddGlobalScreen({super.key});
@@ -217,7 +218,8 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
   void _handleSubmit(BuildContext context) {
     if (_itemNameController.text.isEmpty) return;
 
-    final provider = context.read<CartonProvider>();
+    final cartonProvider = context.read<CartonProvider>();
+    final itemProvider = context.read<ItemProvider>();
     late String targetCartonId;
 
     if (_createNewCarton) {
@@ -231,21 +233,23 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
         items: [],
         createdAt: DateTime.now(),
       );
-      provider.addCarton(newCarton);
+      cartonProvider.addCarton(newCarton);
       targetCartonId = newCarton.id;
     } else {
       if (_selectedCarton == null) return;
       targetCartonId = _selectedCarton!.id;
     }
 
-    // 2. Ajouter l'objet
+    // 2. Préparer l'objet
     final newItem = CartonItem(
       id: DateTime.now().toString(),
       cartonId: targetCartonId,
       name: _itemNameController.text,
       description: _itemDescController.text,
     );
-    provider.addItemToCarton(targetCartonId, newItem);
+
+    // 3. Mettre à jour via le nouveau ItemProvider
+    itemProvider.addItem(newItem);
 
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
