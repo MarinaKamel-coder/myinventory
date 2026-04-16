@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/Data/data.dart'; // Pour importer les données initiales
+import 'package:supermoms/src/models/carton.dart';
+
 
 class CartonProvider extends ChangeNotifier {
   // Liste privée pour encapsuler les données
   final List<Carton> _cartons = [...MockData.boxes];
+
+
 
   // --- GETTERS POUR L'INTERFACE UTILISATEUR ---
 
@@ -37,6 +40,7 @@ class CartonProvider extends ChangeNotifier {
   // 4. MODIFIER UN CARTON
   void updateCarton(Carton updatedCarton) {
     final index = _cartons.indexWhere((c) => c.id == updatedCarton.id);
+
     if (index != -1) {
       _cartons[index] = updatedCarton;
       notifyListeners();

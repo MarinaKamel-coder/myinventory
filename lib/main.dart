@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_theme.dart';
 import 'package:supermoms/features/cartons/screens/carton_form_screen.dart';
 import 'package:supermoms/features/home/screens/home_screen.dart';
+import 'package:supermoms/features/items/screens/item_add_global_screen.dart';
 import 'package:supermoms/features/scanner/screens/scan_carton_screen.dart';
+import 'package:supermoms/src/providers/item_provider.dart';
+import 'package:supermoms/src/providers/carton_provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyInventoryApp());
+  await initializeDateFormatting('fr_FR');
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => CartonProvider()),
+        ChangeNotifierProvider(create: (context) => ItemProvider()),
+      ],
+      child: const MyInventoryApp(),
+    ),
+  );
 }
 
 class MyInventoryApp extends StatelessWidget {
@@ -17,13 +31,10 @@ class MyInventoryApp extends StatelessWidget {
         title: 'MyInventory',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-
-        // Route initiale
         home: const HomeScreen(),
-
-        // Définition des routes pour la navigation
         routes: {
           '/add_carton': (context) => const CartonFormScreen(),
+          '/add_item': (context) => const ItemAddGlobalScreen(),
           '/scanner': (context) => const ScanCartonScreen(),
         },
       );
