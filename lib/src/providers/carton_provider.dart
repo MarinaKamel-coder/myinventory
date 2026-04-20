@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supermoms/src/Data/data.dart'; // Pour importer les données initiales
+import 'package:supermoms/src/Data/data.dart'; 
 import 'package:supermoms/src/models/carton.dart';
 
 
@@ -7,13 +7,11 @@ class CartonProvider extends ChangeNotifier {
   // Liste privée pour encapsuler les données
   final List<Carton> _cartons = [...MockData.boxes];
 
-
-
-  // --- GETTERS POUR L'INTERFACE UTILISATEUR ---
+  
 
   // Getter pour lire tous les cartons depuis l'UI
   List<Carton> get cartons => _cartons;
-
+  
   // Getter pour le compteur total de cartons (utilisé dans les stats)
   int get totalCartons => _cartons.length;
 
