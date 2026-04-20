@@ -6,8 +6,8 @@ import 'package:supermoms/app/theme/app_text_styles.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
-import 'package:supermoms/src/providers/item_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
+import 'package:supermoms/src/providers/item_provider.dart';
 
 class CartonDetailScreen extends StatelessWidget {
   const CartonDetailScreen({required this.box, super.key});
@@ -54,7 +54,7 @@ class CartonDetailScreen extends StatelessWidget {
                     child: _buildDeleteButton(),
                   ),
                   const SizedBox(height: 25),
-                  _buildInfoSection(currentBox),
+                  _buildInfoSection(currentBox, items),
                   const SizedBox(height: 25),
                   _buildContentSection(context, currentBox, items),
                   const SizedBox(height: 100),
@@ -155,7 +155,7 @@ class CartonDetailScreen extends StatelessWidget {
         ),
       );
 
-  Widget _buildInfoSection(Carton box) => Container(
+  Widget _buildInfoSection(Carton box, List<CartonItem> items) => Container(
         decoration: _cardDecoration(),
         child: Column(
           children: [
@@ -168,7 +168,7 @@ class CartonDetailScreen extends StatelessWidget {
                   const Divider(),
                   _buildInfoRow('Créé le:', DateFormat('dd MMMM yyyy', 'fr_FR').format(box.createdAt)),
                   const Divider(),
-                  _buildInfoRow("Nombre d'objets:", box.items.length.toString(), isBoldValue: true, valueColor: Colors.green),
+                  _buildInfoRow("Nombre d'objets:", items.length.toString(), isBoldValue: true, valueColor: Colors.green),
                 ],
               ),
             )
