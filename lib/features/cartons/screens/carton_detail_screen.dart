@@ -1,26 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
+import 'package:supermoms/features/items/widgets/item_tile.dart';
+import 'package:supermoms/shared/utils/local_photo_storage.dart';
+import 'package:supermoms/shared/utils/photo_image_provider.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
-import 'package:supermoms/src/providers/item_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
+import 'package:supermoms/src/providers/item_provider.dart';
 
-class CartonDetailScreen extends StatelessWidget {
+class CartonDetailScreen extends StatefulWidget {
   const CartonDetailScreen({required this.box, super.key});
 
   final Carton box;
 
   @override
+  State<CartonDetailScreen> createState() => _CartonDetailScreenState();
+}
+
+class _CartonDetailScreenState extends State<CartonDetailScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<ItemProvider>();
-    final currentBox = context.watch<CartonProvider>().cartons.firstWhere((c) => c.id == box.id, orElse: () => box);
-    
-    // Récupérer les items du carton depuis le nouveau provider
-    final items = itemProvider.getItemsByCartonId(currentBox.id);
+    final currentBox = context.watch<CartonProvider>().cartons.firstWhere((c) => c.id == widget.box.id, orElse: () => widget.box);
+    final allItems = itemProvider.getItemsByCartonId(currentBox.id);
+    final filteredItems = itemProvider.searchItemsByCartonIdAndName(
+      cartonId: currentBox.id,
+      query: _searchQuery,
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
@@ -54,9 +74,9 @@ class CartonDetailScreen extends StatelessWidget {
                     child: _buildDeleteButton(),
                   ),
                   const SizedBox(height: 25),
-                  _buildInfoSection(currentBox),
+                  _buildInfoSection(currentBox, allItems.length),
                   const SizedBox(height: 25),
-                  _buildContentSection(context, currentBox, items),
+                  _buildContentSection(filteredItems, allItems.length),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -155,7 +175,7 @@ class CartonDetailScreen extends StatelessWidget {
         ),
       );
 
-  Widget _buildInfoSection(Carton box) => Container(
+  Widget _buildInfoSection(Carton box, int totalItems) => Container(
         decoration: _cardDecoration(),
         child: Column(
           children: [
@@ -168,7 +188,7 @@ class CartonDetailScreen extends StatelessWidget {
                   const Divider(),
                   _buildInfoRow('Créé le:', DateFormat('dd MMMM yyyy', 'fr_FR').format(box.createdAt)),
                   const Divider(),
-                  _buildInfoRow("Nombre d'objets:", box.items.length.toString(), isBoldValue: true, valueColor: Colors.green),
+                  _buildInfoRow("Nombre d'objets:", totalItems.toString(), isBoldValue: true, valueColor: Colors.green),
                 ],
               ),
             )
@@ -176,32 +196,69 @@ class CartonDetailScreen extends StatelessWidget {
         ),
       );
 
-  Widget _buildContentSection(BuildContext context, Carton box, List<CartonItem> items) => Container(
+  Widget _buildContentSection(List<CartonItem> items, int totalItems) => Container(
         decoration: _cardDecoration(),
         child: Column(
           children: [
-            _buildSectionHeader('Contenu du carton (${items.length})', Icons.inventory, const Color(0xFFF06292)),
+            _buildSectionHeader(
+              _searchQuery.trim().isEmpty
+                  ? 'Contenu du carton (${items.length})'
+                  : 'Résultats (${items.length}/$totalItems)',
+              Icons.inventory,
+              const Color(0xFFF06292),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                decoration: InputDecoration(
+                  hintText: 'Rechercher un objet par nom',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchQuery.trim().isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                          icon: const Icon(Icons.close),
+                        ),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey.shade200),
+                  ),
+                ),
+              ),
+            ),
             if (items.isEmpty)
-              const Padding(padding: EdgeInsets.all(30), child: Text('Aucun objet', style: TextStyle(color: Colors.grey)))
+              Padding(
+                padding: const EdgeInsets.all(30),
+                child: Text(
+                  _searchQuery.trim().isEmpty
+                      ? 'Aucun objet'
+                      : 'Aucun objet ne correspond a la recherche.',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              )
             else
               ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: items.length,
-                separatorBuilder: (context, index) => const Divider(height: 1),
+                separatorBuilder: (context, index) => const SizedBox(height: 0),
                 itemBuilder: (context, index) {
                   final item = items[index];
-                  return ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 50, height: 50,
-                        color: Colors.grey.shade100,
-                        child: const Icon(Icons.image_outlined, color: Colors.grey),
-                      ),
-                    ),
-                    title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(item.description ?? 'Aucune description'),
+                  return ItemTile(
+                    title: item.name,
+                    subtitle: item.description ?? 'Aucune description',
+                    imageUrl: item.photo,
                   );
                 },
               ),
@@ -283,38 +340,94 @@ class CartonDetailScreen extends StatelessWidget {
   void _showAddItemDialog(BuildContext context, String cartonId) {
     final nameController = TextEditingController();
     final descController = TextEditingController();
+    final picker = ImagePicker();
+    String? photoPath;
 
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Nouvel objet'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nom'), autofocus: true),
-            TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description')),
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setModalState) => AlertDialog(
+          title: const Text('Nouvel objet'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nom'), autofocus: true),
+                TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description')),
+                const SizedBox(height: 12),
+                _buildDialogPhotoSelector(
+                  photoPath,
+                  onTap: () async {
+                    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+                    if (picked == null) return;
+
+                    final storedPath = await persistPickedPhoto(picked);
+                    if (!dialogContext.mounted) return;
+
+                    if (storedPath == null) {
+                      ScaffoldMessenger.of(dialogContext).showSnackBar(
+                        const SnackBar(content: Text('Impossible de sauvegarder la photo localement.')),
+                      );
+                      return;
+                    }
+
+                    setModalState(() => photoPath = storedPath);
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('ANNULER')),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  final newItem = CartonItem(
+                    id: DateTime.now().toString(),
+                    cartonId: cartonId,
+                    name: nameController.text,
+                    description: descController.text,
+                    photo: photoPath,
+                  );
+
+                  context.read<ItemProvider>().addItem(newItem);
+                  Navigator.pop(dialogContext);
+                }
+              },
+              child: const Text('AJOUTER'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                final newItem = CartonItem(
-                  id: DateTime.now().toString(),
-                  cartonId: cartonId,
-                  name: nameController.text,
-                  description: descController.text,
-                );
-                
-                context.read<ItemProvider>().addItem(newItem);
+      ),
+    );
+  }
 
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('AJOUTER'),
-          ),
-        ],
+  Widget _buildDialogPhotoSelector(String? photoPath, {required VoidCallback onTap}) {
+    final imageProvider = buildPhotoImageProvider(photoPath);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 90,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: imageProvider == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.camera_alt_outlined, color: Colors.grey.shade400),
+                  const SizedBox(height: 4),
+                  Text('Ajouter une photo', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                ],
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image(image: imageProvider, fit: BoxFit.cover),
+              ),
       ),
     );
   }
