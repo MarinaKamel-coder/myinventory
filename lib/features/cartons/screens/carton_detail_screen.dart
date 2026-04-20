@@ -13,6 +13,7 @@ import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
 
+
 class CartonDetailScreen extends StatefulWidget {
   const CartonDetailScreen({required this.box, super.key});
 
