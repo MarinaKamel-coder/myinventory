@@ -48,10 +48,13 @@ class HomeScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: TextField(
-                  decoration: InputDecoration(
+                  onChanged: (value) {
+                    context.read<CartonProvider>().setSearchQuery(value);
+                  },
+                  decoration: const InputDecoration(
                     hintText: 'Rechercher un carton ou un objet...',
                     prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
                   ),
