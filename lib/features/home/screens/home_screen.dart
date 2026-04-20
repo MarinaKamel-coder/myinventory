@@ -27,31 +27,109 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
               GradientHeader(
-                height: 300,
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 25.0,
-                      vertical: 10.0,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'MyInventory',
-                          style: theme.textTheme.displayLarge,
+                height: 200, 
+                child: Stack(
+                  children: [
+                    Positioned(
+                      top: -30,
+                      left: -40,
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withOpacity(0.05),
                         ),
-                        Text(
-                          'Votre déménagement organisé',
-                          style: theme.textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 25),
-                        _buildProgressSection(cartons.length),
-                      ],
+                      ),
                     ),
-                  ),
+                    
+                    SafeArea(
+                      child: Center( 
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // --- 1. LOGO  ---
+                              Container(
+                                height: 60,
+                                width: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                  image: const DecorationImage(
+                                    image: AssetImage('assets/images/logo.png'),
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 12), 
+
+                              // --- 2. TITRE MyINVENTORY ---
+                              Text(
+                                'MyINVENTORY',
+                                style: theme.textTheme.displayLarge?.copyWith(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.0,
+                                  color: Colors.white,
+                                ),
+                              ),
+
+                              const SizedBox(height: 4), 
+
+                              // --- 3. SOUS-TITRE ---
+                              Text(
+                                'Votre déménagement organisé',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w300,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              // GradientHeader(
+              //   height: 300,
+              //   child: SafeArea(
+              //     child: Padding(
+              //       padding: const EdgeInsets.symmetric(
+              //         horizontal: 25.0,
+              //         vertical: 10.0,
+              //       ),
+              //       child: Column(
+              //         crossAxisAlignment: CrossAxisAlignment.start,
+              //         children: [
+              //           Text(
+              //             'MyInventory',
+              //             style: theme.textTheme.displayLarge,
+              //           ),
+              //           Text(
+              //             'Votre déménagement organisé',
+              //             style: theme.textTheme.headlineMedium,
+              //           ),
+              //           const SizedBox(height: 25),
+              //           _buildProgressSection(cartons.length),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
 
               const SizedBox(height: 20),
 
@@ -192,43 +270,43 @@ class HomeScreen extends StatelessWidget {
 
   // --- WIDGETS DE CONSTRUCTION ---
 
-  Widget _buildProgressSection(int total) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppColors.white.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Progression',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '$total cartons',
-                style: const TextStyle(color: AppColors.white, fontSize: 12),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const LinearProgressIndicator(
-            value: 0.3,
-            backgroundColor: Colors.white24,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.success),
-            minHeight: 8,
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildProgressSection(int total) {
+  //   return Container(
+  //     padding: const EdgeInsets.all(15),
+  //     decoration: BoxDecoration(
+  //       color: AppColors.white.withOpacity(0.15),
+  //       borderRadius: BorderRadius.circular(20),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             const Text(
+  //               'Progression',
+  //               style: TextStyle(
+  //                 color: AppColors.white,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //             Text(
+  //               '$total cartons',
+  //               style: const TextStyle(color: AppColors.white, fontSize: 12),
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 10),
+  //         const LinearProgressIndicator(
+  //           value: 0.3,
+  //           backgroundColor: Colors.white24,
+  //           valueColor: AlwaysStoppedAnimation<Color>(AppColors.success),
+  //           minHeight: 8,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildStatCard(
     String value,

@@ -4,7 +4,7 @@ import 'package:supermoms/app/theme/app_colors.dart';
 class GradientHeader extends StatelessWidget {
   const GradientHeader({
     required this.child,
-    this.height = 250.0,
+    this.height = 200.0,
     super.key,
   });
 
@@ -13,15 +13,22 @@ class GradientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: double.infinity,
-        height: height,
-        decoration: const BoxDecoration(
-          gradient: AppColors.mainGradient,
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(40),
-            bottomRight: Radius.circular(40),
-          ),
+      width: double.infinity,
+      height: height,
+      decoration: BoxDecoration( 
+        gradient: AppColors.mainGradient,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(50), 
+          bottomRight: Radius.circular(50),
         ),
-        child: child,
-      );
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+    child: child,
+  );
 }
