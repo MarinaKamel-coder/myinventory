@@ -1,19 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:supermoms/src/Data/data.dart'; // Pour importer les données initiales
+import 'package:supermoms/src/Data/data.dart'; 
 import 'package:supermoms/src/models/carton.dart';
 
 
 class CartonProvider extends ChangeNotifier {
   // Liste privée pour encapsuler les données
   final List<Carton> _cartons = [...MockData.boxes];
+  String _searchQuery = ''; // Variable pour stocker la requête de recherche actuelle
 
-
-
-  // --- GETTERS POUR L'INTERFACE UTILISATEUR ---
+  String get searchQuery => _searchQuery;
 
   // Getter pour lire tous les cartons depuis l'UI
-  List<Carton> get cartons => _cartons;
+  List<Carton> get cartons {
+      if (_searchQuery.isEmpty) return _cartons;
+      
+      final query = _searchQuery.toLowerCase();
 
+      return _cartons.where((carton) {
+        // Vérifie si le nom du carton correspond
+        bool nameMatches = carton.name.toLowerCase().contains(query);
+        
+        // Vérifie si l'un des objets à l'intérieur correspond
+        bool itemMatches = carton.items.any((item) => 
+            item.name.toLowerCase().contains(query));
+
+        return nameMatches || itemMatches;
+      }).toList();
+    }
+
+  // Méthode pour mettre à jour la recherche depuis le TextField
+  void setSearchQuery(String query) {
+      _searchQuery = query;
+      notifyListeners();
+    }
+  
   // Getter pour le compteur total de cartons (utilisé dans les stats)
   int get totalCartons => _cartons.length;
 
