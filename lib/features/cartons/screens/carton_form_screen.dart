@@ -21,7 +21,6 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
   final _cartonNameController = TextEditingController();
   final _itemNameController = TextEditingController();
   final _itemDescController = TextEditingController();
-  
   late Room _selectedRoom;
   final List<CartonItem> _addedItems = [];
 
@@ -209,12 +208,13 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
   Widget _buildCreateCartonButton(BuildContext context) => GestureDetector(
         onTap: () {
           if (_cartonNameController.text.isNotEmpty) {
+            final cartonId = DateTime.now().toString();
             final newCarton = Carton(
-              id: DateTime.now().toString(),
+              id: cartonId,
               name: _cartonNameController.text,
               room: _selectedRoom,
               fragile: _isFragile,
-              items: List<CartonItem>.from(_addedItems),
+              items: List<CartonItem>.from(_addedItems.map((item) => item.copyWith(cartonId: cartonId))),
               createdAt: DateTime.now(),
             );
             context.read<CartonProvider>().addCarton(newCarton);

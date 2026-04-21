@@ -53,3 +53,29 @@ class Carton {
   @override
   int get hashCode => Object.hash(id, name, room, fragile, items, createdAt);
 }
+
+
+extension CartonSqlMapping on Carton {
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'room': room.label,
+      'fragile': fragile ? 1 : 0,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
+
+static Carton fromMap(Map<String, dynamic> map, List<CartonItem> items) {
+    return Carton(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      room: Room.values.firstWhere(
+        (r) => r.label == (map['room'] as String),
+      ),
+      fragile: (map['fragile'] as int) == 1,
+      items: items,
+      createdAt: DateTime.parse(map['created_at'] as String),
+    );
+  }
+}

@@ -1,69 +1,57 @@
 import 'package:flutter/material.dart';
-import 'package:supermoms/src/Data/data.dart'; 
 import 'package:supermoms/src/models/carton.dart';
+import 'package:supermoms/src/repositories/carton_repository.dart';
 
 
 class CartonProvider extends ChangeNotifier {
-  // Liste privée pour encapsuler les données
-  final List<Carton> _cartons = [...MockData.boxes];
-  String _searchQuery = ''; // Variable pour stocker la requête de recherche actuelle
+  final CartonRepository _repo = CartonRepository();
 
+  List<Carton> _cartons = [];
+  String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  // Getter pour lire tous les cartons depuis l'UI
-  List<Carton> get cartons {
-      if (_searchQuery.isEmpty) return _cartons;
-      
-      final query = _searchQuery.toLowerCase();
-
-      return _cartons.where((carton) {
-        // Vérifie si le nom du carton correspond
-        bool nameMatches = carton.name.toLowerCase().contains(query);
-        
-        // Vérifie si l'un des objets à l'intérieur correspond
-        bool itemMatches = carton.items.any((item) => 
-            item.name.toLowerCase().contains(query));
-
-        return nameMatches || itemMatches;
-      }).toList();
-    }
-
-  // Méthode pour mettre à jour la recherche depuis le TextField
-  void setSearchQuery(String query) {
-      _searchQuery = query;
-      notifyListeners();
-    }
-  
-  // Getter pour le compteur total de cartons (utilisé dans les stats)
-  int get totalCartons => _cartons.length;
-
-  // Getter pour le nombre de cartons fragiles
-  int get fragileCount => _cartons.where((c) => c.fragile).length;
-
-  // --- MÉTHODES CRUD POUR LES CARTONS ---
-
-  // 1. GET ALL CARTONS (Déjà couvert par le getter 'cartons', mais on peut aussi créer une méthode si besoin de filtrer plus tard)
-  List<Carton> getAllCartons() => _cartons;
-
-  // 2. AJOUTER UN CARTON
-  void addCarton(Carton newCarton) {
-    _cartons.insert(0, newCarton); // Ajoute au début pour qu'il soit en haut de liste
-    notifyListeners(); // Crucial pour mettre à jour l'UI instantanément
-  }
-
-  // 3. SUPPRIMER UN CARTON
-  void removeCarton(String cartonId) {
-    _cartons.removeWhere((c) => c.id == cartonId);
+  Future<void> loadCartons() async {
+    _cartons = await _repo.getAllCartons();
     notifyListeners();
   }
 
-  // 4. MODIFIER UN CARTON
-  void updateCarton(Carton updatedCarton) {
-    final index = _cartons.indexWhere((c) => c.id == updatedCarton.id);
+  List<Carton> get cartons {
+    if (_searchQuery.isEmpty) return _cartons;
 
+    final query = _searchQuery.toLowerCase();
+
+    return _cartons.where((carton) {
+      final nameMatches = carton.name.toLowerCase().contains(query);
+      final itemMatches = carton.items.any(
+        (item) => item.name.toLowerCase().contains(query),
+      );
+      return nameMatches || itemMatches;
+    }).toList();
+  }
+
+  void addCarton(Carton carton) async {
+    await _repo.insertCarton(carton);
+    _cartons.insert(0, carton);
+    notifyListeners();
+  }
+
+  void removeCarton(String id) async {
+    await _repo.deleteCarton(id);
+    _cartons.removeWhere((c) => c.id == id);
+    notifyListeners();
+  }
+
+  void updateCarton(Carton carton) async {
+    await _repo.updateCarton(carton);
+    final index = _cartons.indexWhere((c) => c.id == carton.id);
     if (index != -1) {
-      _cartons[index] = updatedCarton;
+      _cartons[index] = carton;
       notifyListeners();
     }
+  }
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
   }
 }

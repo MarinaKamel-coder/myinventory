@@ -8,16 +8,29 @@ import 'package:supermoms/features/cartons/screens/carton_detail_screen.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends  StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+void initState() {
+  super.initState();
+  Future.microtask(() {
+    context.read<CartonProvider>().loadCartons();
+  });
+}
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     // On écoute le Provider pour avoir les données réelles (pas les mocks)
-    final provider = context.watch<CartonProvider>();
-    final cartons = provider.cartons; // Utilise le getter qui applique la recherche et les filtres
+    final cartonProvider = context.watch<CartonProvider>();
+
+    //final provider = context.watch<CartonProvider>();
+    final cartons = cartonProvider.cartons; // Utilise le getter qui applique la recherche et les filtres
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -196,9 +209,9 @@ class HomeScreen extends StatelessWidget {
               // LISTE DES CARTONS AVEC LOGIQUE DE RECHERCHE D'OBJETS
               ...cartons.map((box) {
                 String? foundItem;
-                if (provider.searchQuery.isNotEmpty) {
+                if (cartonProvider.searchQuery.isNotEmpty) {
                   final match = box.items.where((item) => 
-                    item.name.toLowerCase().contains(provider.searchQuery.toLowerCase())
+                    item.name.toLowerCase().contains(cartonProvider.searchQuery.toLowerCase())
                   );
                   if (match.isNotEmpty) {
                     foundItem = match.first.name;

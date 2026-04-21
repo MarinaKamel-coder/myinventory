@@ -44,3 +44,24 @@ class CartonItem {
   @override
   int get hashCode => Object.hash(id, cartonId, name, description, photo);
 }
+
+extension CartonItemSqlMapping on CartonItem {
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'carton_id': cartonId,
+        'name': name,
+        'description': description,
+        'photo': photo,
+      };
+
+  static CartonItem fromMap(Map<String, dynamic> map) {
+    return CartonItem(
+      id: map['id'] as String,
+      cartonId: map['carton_id'] as String,
+      name: map['name'] as String,
+      description: map['description'] as String?,
+      photo: map['photo'] as String?,
+    );
+  }
+}
+

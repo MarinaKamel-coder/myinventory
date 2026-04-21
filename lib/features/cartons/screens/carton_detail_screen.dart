@@ -9,17 +9,35 @@ import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
 
-class CartonDetailScreen extends StatelessWidget {
+
+
+class CartonDetailScreen extends StatefulWidget {
   const CartonDetailScreen({required this.box, super.key});
 
   final Carton box;
+  @override
+  State<CartonDetailScreen> createState() => _CartonDetailScreenState();
+}
 
+class _CartonDetailScreenState extends State<CartonDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Charger les items du carton depuis SQLite
+    Future.microtask(() {
+      context.read<ItemProvider>().loadItems(widget.box.id);
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<ItemProvider>();
-    final currentBox = context.watch<CartonProvider>().cartons.firstWhere((c) => c.id == box.id, orElse: () => box);
-    
-    // Récupérer les items du carton depuis le nouveau provider
+    final cartonProvider = context.watch<CartonProvider>();
+     final currentBox = cartonProvider.cartons.firstWhere(
+      (c) => c.id == widget.box.id,
+      orElse: () => widget.box,
+    );
+
     final items = itemProvider.getItemsByCartonId(currentBox.id);
 
     return Scaffold(
