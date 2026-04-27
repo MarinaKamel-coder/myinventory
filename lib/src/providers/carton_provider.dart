@@ -1,76 +1,85 @@
 import 'package:flutter/material.dart';
-import 'package:supermoms/src/Data/data.dart'; 
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/repositories/carton_repository.dart';
 
 class CartonProvider extends ChangeNotifier {
-  // Liste privée pour encapsuler les données
-  final List<Carton> _cartons = [...MockData.boxes];
-  String _searchQuery = ''; // Variable pour stocker la requête de recherche actuelle
-
+  final CartonRepository _repository = CartonRepository();
+  
   List<Carton> _cartons = [];
   String _searchQuery = '';
+
   String get searchQuery => _searchQuery;
 
-  // Getter pour lire tous les cartons depuis l'UI
+  // Getter avec logique de recherche
   List<Carton> get cartons {
     if (_searchQuery.isEmpty) return _cartons;
 
     final query = _searchQuery.toLowerCase();
 
-      return _cartons.where((carton) {
-        // Vérifie si le nom du carton correspond
-        bool nameMatches = carton.name.toLowerCase().contains(query);
-        
-        // Vérifie si l'un des objets à l'intérieur correspond
-        bool itemMatches = carton.items.any((item) => 
-            item.name.toLowerCase().contains(query));
+    return _cartons.where((carton) {
+      bool nameMatches = carton.name.toLowerCase().contains(query);
+      bool itemMatches = carton.items.any((item) => 
+          item.name.toLowerCase().contains(query));
+      return nameMatches || itemMatches;
+    }).toList();
+  }
 
-        return nameMatches || itemMatches;
-      }).toList();
-    }
+  // --- MÉTHODES SQLite ---
 
-  // Méthode pour mettre à jour la recherche depuis le TextField
-  void setSearchQuery(String query) {
-      _searchQuery = query;
+  // Charger les données depuis la base
+  Future<void> loadCartons() async {
+    try {
+      _cartons = await _repository.getAllCartons();
       notifyListeners();
+    } catch (e) {
+      debugPrint("Erreur CartonProvider.loadCartons: $e");
     }
-  
-  // Getter pour le compteur total de cartons (utilisé dans les stats)
-  int get totalCartons => _cartons.length;
-
-  // Getter pour le nombre de cartons fragiles
-  int get fragileCount => _cartons.where((c) => c.fragile).length;
-
-  // --- MÉTHODES CRUD POUR LES CARTONS ---
-
-  // 1. GET ALL CARTONS (Déjà couvert par le getter 'cartons', mais on peut aussi créer une méthode si besoin de filtrer plus tard)
-  List<Carton> getAllCartons() => _cartons;
-
-  // 2. AJOUTER UN CARTON
-  void addCarton(Carton newCarton) {
-    _cartons.insert(0, newCarton); // Ajoute au début pour qu'il soit en haut de liste
-    notifyListeners(); // Crucial pour mettre à jour l'UI instantanément
   }
 
-  // 3. SUPPRIMER UN CARTON
-  void removeCarton(String cartonId) {
-    _cartons.removeWhere((c) => c.id == cartonId);
-    notifyListeners();
-  }
-
-  // 4. MODIFIER UN CARTON
-  void updateCarton(Carton updatedCarton) {
-    final index = _cartons.indexWhere((c) => c.id == updatedCarton.id);
-
-    if (index != -1) {
-      _cartons[index] = carton;
+  // Ajouter un carton en base et en mémoire
+  Future<void> addCarton(Carton newCarton) async {
+    try {
+      await _repository.insertCarton(newCarton);
+      _cartons.insert(0, newCarton);
       notifyListeners();
+    } catch (e) {
+      debugPrint("Erreur CartonProvider.addCarton: $e");
     }
   }
+
+  // Supprimer un carton
+  Future<void> deleteCarton(String cartonId) async {
+    try {
+      await _repository.deleteCarton(cartonId);
+      _cartons.removeWhere((c) => c.id == cartonId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Erreur CartonProvider.deleteCarton: $e");
+    }
+  }
+
+  // Mettre à jour un carton
+  Future<void> updateCarton(Carton updatedCarton) async {
+    try {
+      await _repository.updateCarton(updatedCarton);
+      final index = _cartons.indexWhere((c) => c.id == updatedCarton.id);
+      if (index != -1) {
+        _cartons[index] = updatedCarton;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Erreur CartonProvider.updateCarton: $e");
+    }
+  }
+
+  // --- RECHERCHE ---
 
   void setSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
   }
+
+  // Stats
+  int get totalCartons => _cartons.length;
+  int get fragileCount => _cartons.where((c) => c.fragile).length;
 }

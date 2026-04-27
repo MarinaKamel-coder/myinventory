@@ -43,11 +43,11 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE carton_items (
         id TEXT PRIMARY KEY,
-        carton_id TEXT NOT NULL,
+        cartonId TEXT NOT NULL,
         name TEXT NOT NULL,
         description TEXT,
         photo TEXT,
-        FOREIGN KEY (carton_id) REFERENCES cartons(id) ON DELETE CASCADE
+        FOREIGN KEY (cartonId) REFERENCES cartons(id) ON DELETE CASCADE
       );
     ''');
   }

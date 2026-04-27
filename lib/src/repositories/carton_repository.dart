@@ -15,7 +15,7 @@ class CartonRepository {
     for (final row in cartonRows) {
       final items = await database.query(
         'carton_items',
-        where: 'carton_id = ?',
+        where: 'cartonId = ?',
         whereArgs: [row['id']],
       );
 
@@ -37,7 +37,7 @@ class CartonRepository {
 
   Future<void> deleteCarton(String id) async {
     final database = await db.database;
-    await database.delete('carton_items', where: 'carton_id = ?', whereArgs: [id]);
+    await database.delete('carton_items', where: 'cartonId = ?', whereArgs: [id]);
     await database.delete('cartons', where: 'id = ?', whereArgs: [id]);
   }
 

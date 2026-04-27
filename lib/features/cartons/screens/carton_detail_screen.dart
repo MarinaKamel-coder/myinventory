@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
-import 'package:supermoms/features/items/widgets/item_tile.dart';
 import 'package:supermoms/shared/utils/local_photo_storage.dart';
 import 'package:supermoms/shared/utils/photo_image_provider.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
@@ -24,30 +23,12 @@ class CartonDetailScreen extends StatefulWidget {
 
 class _CartonDetailScreenState extends State<CartonDetailScreen> {
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
-
-  // Helper pour le design des champs Input
-  InputDecoration _dialogInputStyle(String label, IconData icon) => InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.headerMid.withOpacity(0.7)),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(15),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-      );
 
   // --- ACTIONS SUR LE CARTON ---
 
@@ -62,7 +43,6 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
           TextButton(
             onPressed: () {
-              context.read<ItemProvider>().removeAllItemsOfCarton(cartonId);
               context.read<CartonProvider>().deleteCarton(cartonId);
               Navigator.pop(context);
               Navigator.pop(context);
@@ -111,7 +91,11 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
               ),
               onPressed: () {
                 if (nameController.text.isNotEmpty) {
-                  context.read<CartonProvider>().updateCarton(box.id, nameController.text, isFragile);
+                  final updatedBox = box.copyWith(
+                    name: nameController.text,
+                    fragile: isFragile,
+                  );
+                  context.read<CartonProvider>().updateCarton(updatedBox);
                   Navigator.pop(context);
                 }
               },
@@ -152,20 +136,12 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-                TextField(
-                  controller: nameController,
-                  decoration: _dialogInputStyle('Nom de l\'objet', Icons.tag),
-                ),
+                TextField(controller: nameController, decoration: _dialogInputStyle('Nom de l\'objet', Icons.tag)),
                 const SizedBox(height: 15),
-                TextField(
-                  controller: descController,
-                  maxLines: 2,
-                  decoration: _dialogInputStyle('Description (facultatif)', Icons.notes),
-                ),
+                TextField(controller: descController, maxLines: 2, decoration: _dialogInputStyle('Description', Icons.notes)),
               ],
             ),
           ),
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           actions: [
             if (isEditing)
               TextButton(
@@ -180,10 +156,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.headerMid,
-                foregroundColor: Colors.white, // Texte forcé en blanc
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                minimumSize: const Size(110, 45),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                foregroundColor: Colors.white,
               ),
               onPressed: () {
                 if (nameController.text.isNotEmpty) {
@@ -194,8 +167,8 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                     description: descController.text,
                     photo: photoPath,
                   );
-                  isEditing
-                    ? context.read<ItemProvider>().updateItem(newItem)
+                  isEditing 
+                    ? context.read<ItemProvider>().updateItem(newItem) 
                     : context.read<ItemProvider>().addItem(newItem);
                   Navigator.pop(context);
                 }
@@ -208,12 +181,54 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
     );
   }
 
+  // --- WIDGETS DE CONSTRUCTION ---
+
+  Widget _buildDialogPhotoSelector(String? photoPath, {required VoidCallback onTap}) {
+    final provider = buildPhotoImageProvider(photoPath);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 120,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: provider != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image(image: provider, fit: BoxFit.cover),
+              )
+            : const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40),
+                  SizedBox(height: 8),
+                  Text('Ajouter une photo', style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+      ),
+    );
+  }
+
+  InputDecoration _dialogInputStyle(String label, IconData icon) => InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppColors.headerMid.withOpacity(0.7)),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey.shade200)),
+      );
+
   @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<ItemProvider>();
-    final currentBox = context.watch<CartonProvider>().cartons.firstWhere((c) => c.id == box.id, orElse: () => box);
+    final currentBox = context.watch<CartonProvider>().cartons.firstWhere(
+      (c) => c.id == widget.box.id, 
+      orElse: () => widget.box
+    );
     
-    // Récupérer les items du carton depuis le nouveau provider
     final items = itemProvider.getItemsByCartonId(currentBox.id);
 
     return Scaffold(
@@ -230,14 +245,16 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                     children: [
                       Expanded(
                         child: _buildWinkAnimation(
-                          child: _buildActionButton('Étiquette PDF', Icons.download, const Color(0xFF27AE60)),
+                          child: _buildActionButton('Étiquette PDF', Icons.download, const Color(0xFF27AE60), () {}),
                         ),
                       ),
                       const SizedBox(width: 15),
                       Expanded(
                         child: _buildWinkAnimation(
                           delayMs: 150,
-                          child: _buildActionButton('Modifier', Icons.edit_note, const Color(0xFF7F56D9)),
+                          child: _buildActionButton('Modifier', Icons.edit_note, const Color(0xFF7F56D9), () {
+                            _showEditCartonDialog(context, currentBox);
+                          }),
                         ),
                       ),
                     ],
@@ -245,7 +262,10 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                   const SizedBox(height: 15),
                   _buildWinkAnimation(
                     delayMs: 300,
-                    child: _buildDeleteButton(),
+                    child: GestureDetector(
+                      onTap: () => _showDeleteCartonConfirmation(context, currentBox.id),
+                      child: _buildDeleteButton(),
+                    ),
                   ),
                   const SizedBox(height: 25),
                   _buildInfoSection(currentBox, items),
@@ -278,59 +298,50 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Icon(Icons.inventory_2, color: Colors.white, size: 30),
-                  ),
+                  const Icon(Icons.inventory_2, color: Colors.white, size: 30),
                   const SizedBox(width: 15),
-                  Text(box.name, style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 28)),
+                  Text(box.name, style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 24)),
                 ],
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(box.room.label, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
-                  const SizedBox(width: 10),
-                  if (box.fragile)
+                  Text(box.room.label, style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                  if (box.fragile) ...[
+                    const SizedBox(width: 10),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.warning, color: Colors.white, size: 12),
-                          SizedBox(width: 4),
-                          Text('Fragile', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(5)),
+                      child: const Text('FRAGILE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
+                  ]
                 ],
-              )
+              ),
             ],
           ),
         ),
       );
 
-  Widget _buildActionButton(String label, IconData icon, Color color) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      );
+  );
 
   Widget _buildDeleteButton() => Container(
         width: double.infinity,
@@ -360,7 +371,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                 children: [
                   _buildInfoRow('ID:', '${box.id.substring(0, 8)}...', isGrey: true),
                   const Divider(),
-                  _buildInfoRow('Créé le:', DateFormat('dd MMMM yyyy', 'fr_FR').format(box.createdAt)),
+                  _buildInfoRow('Créé le:', DateFormat('dd/MM/yyyy').format(box.createdAt)),
                   const Divider(),
                   _buildInfoRow("Nombre d'objets:", items.length.toString(), isBoldValue: true, valueColor: Colors.green),
                 ],
@@ -385,17 +396,17 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                 separatorBuilder: (context, index) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final item = items[index];
+                  final photoProvider = buildPhotoImageProvider(item.photo);
                   return ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 50, height: 50,
-                        color: Colors.grey.shade100,
-                        child: const Icon(Icons.image_outlined, color: Colors.grey),
-                      ),
+                      child: photoProvider != null 
+                        ? Image(image: photoProvider, width: 50, height: 50, fit: BoxFit.cover)
+                        : Container(width: 50, height: 50, color: Colors.grey.shade100, child: const Icon(Icons.image_outlined, color: Colors.grey)),
                     ),
                     title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(item.description ?? 'Aucune description'),
+                    onTap: () => _showItemForm(context, item: item, cartonId: box.id),
                   );
                 },
               ),
@@ -406,7 +417,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
   Widget _buildSectionHeader(String title, IconData icon, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.7)]),
+          color: color,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Row(
@@ -424,15 +435,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: isGrey ? BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8)) : null,
-              child: Text(value, style: TextStyle(
-                fontWeight: isBoldValue ? FontWeight.bold : FontWeight.normal,
-                color: valueColor ?? Colors.black87,
-                fontSize: isGrey ? 12 : 14,
-              )),
-            ),
+            Text(value, style: TextStyle(fontWeight: isBoldValue ? FontWeight.bold : FontWeight.normal, color: valueColor ?? Colors.black87)),
           ],
         ),
       );
@@ -440,76 +443,24 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
   BoxDecoration _cardDecoration() => BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
       );
 
   Widget _buildWinkAnimation({required Widget child, int delayMs = 0}) => TweenAnimationBuilder<double>(
         tween: Tween<double>(begin: 0.0, end: 1.0),
         duration: const Duration(milliseconds: 1000),
         curve: Curves.elasticOut,
-        builder: (context, value, child) {
-          // Rotation de -0.1 radians (environ -5 degrés) vers 0
-          final rotation = (1.0 - value) * -0.2;
-          return Transform.rotate(
-            angle: rotation,
-            child: Transform.scale(
-              scale: value,
-              child: child,
-            ),
-          );
-        },
-        child: Padding(
-          padding: EdgeInsets.only(top: delayMs / 50), // Petit hack pour décaler l'apparition
-          child: child,
-        ),
+        builder: (context, value, child) => Transform.scale(scale: value, child: child),
+        child: child,
       );
 
   Widget _buildAnimatedFAB(BuildContext context, String cartonId) => _buildWinkAnimation(
         delayMs: 500,
         child: FloatingActionButton.extended(
-          onPressed: () => _showAddItemDialog(context, cartonId),
+          onPressed: () => _showItemForm(context, cartonId: cartonId),
           label: const Text('Ajouter un objet'),
           icon: const Icon(Icons.add),
           backgroundColor: AppColors.headerMid,
         ),
       );
-
-  void _showAddItemDialog(BuildContext context, String cartonId) {
-    final nameController = TextEditingController();
-    final descController = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Nouvel objet'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Nom'), autofocus: true),
-            TextField(controller: descController, decoration: const InputDecoration(labelText: 'Description')),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                final newItem = CartonItem(
-                  id: DateTime.now().toString(),
-                  cartonId: cartonId,
-                  name: nameController.text,
-                  description: descController.text,
-                );
-                
-                context.read<ItemProvider>().addItem(newItem);
-
-                Navigator.pop(context);
-              }
-            },
-            child: const Text('AJOUTER'),
-          ),
-        ],
-      ),
-    );
-  }
 }

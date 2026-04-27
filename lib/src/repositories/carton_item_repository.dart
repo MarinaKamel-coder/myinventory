@@ -8,7 +8,7 @@ class CartonItemRepository {
     final database = await db.database;
     final result = await database.query(
       'carton_items',
-      where: 'carton_id = ?',
+      where: 'cartonId= ?',
       whereArgs: [cartonId],
     );
     return result.map((e) => CartonItemSqlMapping.fromMap(e)).toList();

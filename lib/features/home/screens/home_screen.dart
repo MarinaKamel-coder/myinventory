@@ -8,7 +8,7 @@ import 'package:supermoms/features/cartons/screens/carton_detail_screen.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 
-class HomeScreen extends  StatefulWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
@@ -16,18 +16,19 @@ class HomeScreen extends  StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   @override
   void initState() {
     super.initState();
 
-  // 🔥 Charger les cartons depuis SQLite
-    Future.microtask(() {
-      context.read<CartonProvider>().loadCartons();
-  });
-}
-
-
+    // 🔥 Chargement sécurisé des données SQLite
+    Future.microtask(() async {
+      try {
+        await context.read<CartonProvider>().loadCartons();
+      } catch (e) {
+        debugPrint("Erreur lors du chargement SQLite : $e");
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               GradientHeader(
-                height: 200, 
+                height: 220,
                 child: Stack(
                   children: [
                     Positioned(
@@ -58,54 +59,54 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ),
-                    
                     SafeArea(
-                      child: Center( 
+                      child: Center(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 20.0),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
+                              // --- LOGO AVEC SÉCURITÉ ---
                               Container(
-                                height: 60,
-                                width: 60,
+                                height: 70,
+                                width: 70,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(15),
+                                  borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
                                     ),
                                   ],
-                                  image: const DecorationImage(
-                                    image: AssetImage('assets/images/logo.png'),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Image.asset(
+                                    'assets/images/logo.png',
                                     fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        const Icon(Icons.inventory,
+                                            size: 40, color: AppColors.headerMid),
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              const SizedBox(height: 12),
-
-                              // --- 2. TITRE MyINVENTORY ---
                               Text(
                                 'MyINVENTORY',
                                 style: theme.textTheme.displayLarge?.copyWith(
-                                  fontSize: 26,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.0,
                                   color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 4),
                               Text(
                                 'Votre déménagement organisé',
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 13,
                                   fontWeight: FontWeight.w300,
-                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ],
@@ -116,28 +117,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 20),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: TextField(
-                  onChanged: (value) {
-                    context.read<CartonProvider>().setSearchQuery(value);
-                  },
+                  onChanged: (value) => provider.setSearchQuery(value),
                   decoration: const InputDecoration(
                     hintText: 'Rechercher un carton ou un objet...',
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: AppColors.textSecondary,
-                    ),
+                    prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // CARTES DE STATISTIQUES
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Row(
@@ -162,91 +153,63 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-
               const SizedBox(height: 25),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Derniers cartons', style: theme.textTheme.titleLarge),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('Voir tout'),
-                    ),
+                    TextButton(onPressed: () {}, child: const Text('Voir tout')),
                   ],
                 ),
               ),
-
-              // LISTE DES CARTONS AVEC LOGIQUE DE RECHERCHE D'OBJETS
-              ...cartons.map((box) {
-                String? foundItem;
-                if (provider.searchQuery.isNotEmpty) {
-                  final match = box.items.where((item) => 
-                    item.name.toLowerCase().contains(provider.searchQuery.toLowerCase())
-                  );
-                  if (match.isNotEmpty) {
-                    foundItem = match.first.name;
+              if (cartons.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(40.0),
+                  child: Text("Aucun carton trouvé"),
+                )
+              else
+                ...cartons.map((box) {
+                  String? foundItem;
+                  if (provider.searchQuery.isNotEmpty) {
+                    final match = box.items.where((item) => item.name
+                        .toLowerCase()
+                        .contains(provider.searchQuery.toLowerCase()));
+                    if (match.isNotEmpty) foundItem = match.first.name;
                   }
-                }
-
-                return _buildCartonItem(
-                  box.name,
-                  box.room.label,
-                  box.items.length,
-                  box.fragile,
-                  () {
-                    Navigator.push(
+                  return _buildCartonItem(
+                    box.name,
+                    box.room.label,
+                    box.items.length,
+                    box.fragile,
+                    () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => CartonDetailScreen(box: box)),
-                    );
-                  },
-                  subtitleAddition: foundItem != null ? 'Contient : $foundItem' : null,
-                );
-              }),
-
+                      MaterialPageRoute(
+                          builder: (context) => CartonDetailScreen(box: box)),
+                    ),
+                    subtitleAddition:
+                        foundItem != null ? 'Contient : $foundItem' : null,
+                  );
+                }),
               const SizedBox(height: 120),
             ],
           ),
         ),
-
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // --- BOUTON SCAN AVEC ANIMATION ÉLASTIQUE ---
-            TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 1000),
-              curve: const Interval(0.2, 1.0, curve: Curves.elasticOut),
-              builder: (context, value, child) => Transform.scale(
-                scale: value,
-                child: FloatingActionButton(
-                  heroTag: 'scan_fab',
-                  onPressed: () => Navigator.pushNamed(context, '/scanner'),
-                  backgroundColor: AppColors.white,
-                  child: const Icon(
-                    Icons.qr_code_scanner,
-                    color: AppColors.headerMid,
-                  ),
-                ),
-              ),
+            FloatingActionButton(
+              heroTag: 'scan_fab',
+              onPressed: () => Navigator.pushNamed(context, '/scanner'),
+              backgroundColor: AppColors.white,
+              child: const Icon(Icons.qr_code_scanner, color: AppColors.headerMid),
             ),
             const SizedBox(height: 15),
-
-            // --- BOUTON + AVEC ANIMATION ÉLASTIQUE ---
-            TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.elasticOut,
-              builder: (context, value, child) => Transform.scale(
-                scale: value,
-                child: FloatingActionButton.large(
-                  heroTag: 'add_fab',
-                  onPressed: () => Navigator.pushNamed(context, '/add_carton'),
-                  child: const Icon(Icons.add, size: 40),
-                ),
-              ),
+            FloatingActionButton.large(
+              heroTag: 'add_fab',
+              onPressed: () => Navigator.pushNamed(context, '/add_carton'),
+              child: const Icon(Icons.add, size: 40),
             ),
           ],
         ),
@@ -254,14 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- WIDGETS DE CONSTRUCTION ---
-
-  Widget _buildStatCard(
-    String value,
-    String label,
-    Color color,
-    IconData icon,
-  ) {
+  Widget _buildStatCard(String value, String label, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -273,27 +229,19 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(icon, color: AppColors.white, size: 30),
           const SizedBox(height: 10),
           Text(value, style: AppTextStyles.statsNumber),
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-          ),
+          Text(label,
+              style: const TextStyle(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12)),
         ],
       ),
     );
   }
 
   Widget _buildCartonItem(
-    String title,
-    String roomLabel,
-    int itemsCount,
-    bool isFragile,
-    VoidCallback onTap, {
-    String? subtitleAddition,
-  }) {
+      String title, String roomLabel, int itemsCount, bool isFragile, VoidCallback onTap,
+      {String? subtitleAddition}) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -302,35 +250,21 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            gradient: AppColors.mainGradient,
-            borderRadius: BorderRadius.circular(12),
-          ),
+              gradient: AppColors.mainGradient,
+              borderRadius: BorderRadius.circular(12)),
           child: const Icon(Icons.inventory_2, color: AppColors.white),
         ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Affichage du texte : Pièce • X objets
-            Text(
-              '$roomLabel • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}',
-              style: const TextStyle(fontSize: 13),
-            ),
+            Text('$roomLabel • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}'),
             if (subtitleAddition != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4.0),
-                child: Text(
-                  subtitleAddition,
+              Text(subtitleAddition,
                   style: const TextStyle(
-                    color: AppColors.statsBlue,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
+                      color: AppColors.statsBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12)),
           ],
         ),
         trailing: isFragile

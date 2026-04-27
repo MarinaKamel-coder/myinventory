@@ -64,7 +64,7 @@ class CartonItem {
 extension CartonItemSqlMapping on CartonItem {
   Map<String, dynamic> toMap() => {
         'id': id,
-        'carton_id': cartonId,
+        'cartonId': cartonId,
         'name': name,
         'description': description,
         'photo': photo,
@@ -73,7 +73,7 @@ extension CartonItemSqlMapping on CartonItem {
   static CartonItem fromMap(Map<String, dynamic> map) {
     return CartonItem(
       id: map['id'] as String,
-      cartonId: map['carton_id'] as String,
+      cartonId: map['cartonId'] as String,
       name: map['name'] as String,
       description: map['description'] as String?,
       photo: map['photo'] as String?,

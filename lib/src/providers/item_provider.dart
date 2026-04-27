@@ -1,35 +1,86 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/repositories/carton_item_repository.dart';
 
 class ItemProvider extends ChangeNotifier {
   final CartonItemRepository _repo = CartonItemRepository();
-
-  ItemProvider() {
-    _loadItems();
-  }
-
-  static const String _storageKey = 'carton_items';
+  
+  // Liste des objets chargés en mémoire
   final List<CartonItem> _items = [];
 
   List<CartonItem> get allItems => _items;
 
+  // Filtrer les objets par carton
   List<CartonItem> getItemsByCartonId(String cartonId) =>
     _items.where((item) => item.cartonId == cartonId).toList();
 
+  // --- MÉTHODES SQLite ---
 
+  // Charger les objets d'un carton spécifique depuis la base de données
   Future<void> loadItems(String cartonId) async {
-    _items.clear();
-    _items.addAll(await _repo.getItemsByCartonId(cartonId));
-    notifyListeners();
+    try {
+      final itemsFromDb = await _repo.getItemsByCartonId(cartonId);
+      // On met à jour la mémoire pour ce carton spécifique
+      _items.removeWhere((item) => item.cartonId == cartonId);
+      _items.addAll(itemsFromDb);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Erreur lors du chargement des objets : $e");
+    }
   }
 
+  // Ajouter un objet (SQLite + Mémoire)
+  Future<void> addItem(CartonItem item) async {
+    try {
+      await _repo.insertItem(item);
+      _items.add(item);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Erreur lors de l'ajout de l'objet : $e");
+    }
+  }
 
-  void addItem(CartonItem item) async {
-    await _repo.insertItem(item);
+  // Supprimer un objet (SQLite + Mémoire)
+  Future<void> removeItem(String itemId) async {
+    try {
+      await _repo.deleteItem(itemId);
+      _items.removeWhere((item) => item.id == itemId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Erreur lors de la suppression de l'objet : $e");
+    }
+  }
+
+  // Mettre à jour un objet (SQLite + Mémoire)
+  Future<void> updateItem(CartonItem updatedItem) async {
+    try {
+      await _repo.updateItem(updatedItem);
+      final index = _items.indexWhere((item) => item.id == updatedItem.id);
+      if (index != -1) {
+        _items[index] = updatedItem;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Erreur lors de la mise à jour : $e");
+    }
+  }
+
+  // Supprimer tous les objets d'un carton
+  Future<void> removeAllItemsOfCarton(String cartonId) async {
+    try {
+      final itemsToDelete = _items.where((i) => i.cartonId == cartonId).toList();
+      for (final item in itemsToDelete) {
+        await _repo.deleteItem(item.id);
+      }
+      _items.removeWhere((item) => item.cartonId == cartonId);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Erreur lors de la suppression groupée : $e");
+    }
+  }
+
+  // --- RECHERCHE ---
+
   List<CartonItem> searchItemsByCartonIdAndName({
     required String cartonId,
     required String query,
@@ -44,63 +95,6 @@ class ItemProvider extends ChangeNotifier {
       final normalizedName = _normalizeSearchText(item.name);
       return normalizedName.contains(normalizedQuery);
     }).toList();
-  }
-
-  void addItem(CartonItem item) {
-    _items.add(item);
-    _saveItems();
-    notifyListeners();
-  }
-
-  void removeItem(String itemId) async {
-    await _repo.deleteItem(itemId);
-    _items.removeWhere((item) => item.id == itemId);
-    _saveItems();
-    notifyListeners();
-  }
-
-  void updateItem(CartonItem updatedItem) async {
-    await _repo.updateItem(updatedItem);
-    final index = _items.indexWhere((item) => item.id == updatedItem.id);
-    if (index != -1) {
-      _items[index] = updatedItem;
-      _saveItems();
-      notifyListeners();
-    }
-  }
-
-  void removeAllItemsOfCarton(String cartonId) async {
-    final itemsToDelete = _items.where((i) => i.cartonId == cartonId).toList();
-    for (final item in itemsToDelete) {
-      await _repo.deleteItem(item.id);
-    }
-    _items.removeWhere((item) => item.cartonId == cartonId);
-    _saveItems();
-    notifyListeners();
-  }
-
-  Future<void> _loadItems() async {
-    final prefs = await SharedPreferences.getInstance();
-    final rawItems = prefs.getString(_storageKey);
-    if (rawItems == null || rawItems.isEmpty) return;
-
-    final decoded = jsonDecode(rawItems);
-    if (decoded is! List) return;
-
-    _items
-      ..clear()
-      ..addAll(
-        decoded
-          .whereType<Map<Object?, Object?>>()
-            .map((item) => CartonItem.fromMap(Map<String, dynamic>.from(item))),
-      );
-    notifyListeners();
-  }
-
-  Future<void> _saveItems() async {
-    final prefs = await SharedPreferences.getInstance();
-    final encoded = jsonEncode(_items.map((item) => item.toMap()).toList());
-    await prefs.setString(_storageKey, encoded);
   }
 
   String _normalizeSearchText(String raw) {
