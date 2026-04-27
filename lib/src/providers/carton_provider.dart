@@ -1,70 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:supermoms/src/Data/data.dart';
 import 'package:supermoms/src/models/carton.dart';
- 
- 
+
 class CartonProvider extends ChangeNotifier {
-  // Liste privée pour encapsuler les données
+  // Liste privée initialisée avec les données mockées
   final List<Carton> _cartons = [...MockData.boxes];
-  String _searchQuery = ''; // Variable pour stocker la requête de recherche actuelle
- 
+  String _searchQuery = '';
+
   String get searchQuery => _searchQuery;
- 
-  // Getter pour lire tous les cartons depuis l'UI
+
+  // Getter avec logique de filtrage
   List<Carton> get cartons {
-      if (_searchQuery.isEmpty) return _cartons;
-     
-      final query = _searchQuery.toLowerCase();
- 
-      return _cartons.where((carton) {
-        // Vérifie si le nom du carton correspond
-        bool nameMatches = carton.name.toLowerCase().contains(query);
-       
-        // Vérifie si l'un des objets à l'intérieur correspond
-        bool itemMatches = carton.items.any((item) =>
-            item.name.toLowerCase().contains(query));
- 
-        return nameMatches || itemMatches;
-      }).toList();
-    }
- 
-  // Méthode pour mettre à jour la recherche depuis le TextField
-  void setSearchQuery(String query) {
-      _searchQuery = query;
-      notifyListeners();
-    }
- 
-  // Getter pour le compteur total de cartons (utilisé dans les stats)
-  int get totalCartons => _cartons.length;
- 
-  // Getter pour le nombre de cartons fragiles
-  int get fragileCount => _cartons.where((c) => c.fragile).length;
- 
-  // --- MÉTHODES CRUD POUR LES CARTONS ---
- 
-  // 1. GET ALL CARTONS (Déjà couvert par le getter 'cartons', mais on peut aussi créer une méthode si besoin de filtrer plus tard)
-  List<Carton> getAllCartons() => _cartons;
- 
-  // 2. AJOUTER UN CARTON
-  void addCarton(Carton newCarton) {
-    _cartons.insert(0, newCarton); // Ajoute au début pour qu'il soit en haut de liste
-    notifyListeners(); // Crucial pour mettre à jour l'UI instantanément
+    if (_searchQuery.isEmpty) return _cartons;
+
+    final query = _searchQuery.toLowerCase();
+
+    return _cartons.where((carton) {
+      // Vérifie le nom du carton
+      bool nameMatches = carton.name.toLowerCase().contains(query);
+      
+      // Vérifie si la pièce (room) correspond aussi 
+      bool roomMatches = carton.room.label.toLowerCase().contains(query);
+
+      return nameMatches || roomMatches;
+    }).toList();
   }
- 
-  // 3. SUPPRIMER UN CARTON
-  void removeCarton(String cartonId) {
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
+  }
+
+  // --- STATISTIQUES ---
+  int get totalCartons => _cartons.length;
+  int get fragileCount => _cartons.where((c) => c.fragile).length;
+
+  // --- MÉTHODES CRUD ---
+
+  // Ajouter un carton
+  void addCarton(Carton newCarton) {
+    _cartons.insert(0, newCarton);
+    notifyListeners();
+  }
+
+  // Supprimer un carton 
+  void deleteCarton(String cartonId) {
     _cartons.removeWhere((c) => c.id == cartonId);
     notifyListeners();
   }
- 
-  // 4. MODIFIER UN CARTON
-  void updateCarton(Carton updatedCarton) {
+
+  // Modifier un carton 
+  void updateCarton(String id, String newName, bool isFragile) {
+    final index = _cartons.indexWhere((c) => c.id == id);
+
+    if (index != -1) {
+      // On crée une copie du carton avec les nouvelles valeurs
+      _cartons[index] = _cartons[index].copyWith(
+        name: newName,
+        fragile: isFragile,
+      );
+      notifyListeners();
+    }
+  }
+
+  // Version alternative si on reçoit un objet complet
+  void updateCartonFull(Carton updatedCarton) {
     final index = _cartons.indexWhere((c) => c.id == updatedCarton.id);
- 
     if (index != -1) {
       _cartons[index] = updatedCarton;
       notifyListeners();
     }
   }
 }
- 

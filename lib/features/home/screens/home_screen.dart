@@ -14,10 +14,8 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // On écoute le Provider pour avoir les données réelles (pas les mocks)
     final provider = context.watch<CartonProvider>();
-    final cartons = provider.cartons; // Utilise le getter qui applique la recherche et les filtres
+    final cartons = provider.cartons;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -27,7 +25,7 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             children: [
               GradientHeader(
-                height: 200, 
+                height: 200,
                 child: Stack(
                   children: [
                     Positioned(
@@ -42,15 +40,13 @@ class HomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    
                     SafeArea(
-                      child: Center( 
+                      child: Center(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 20.0),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // --- 1. LOGO  ---
                               Container(
                                 height: 60,
                                 width: 60,
@@ -70,10 +66,7 @@ class HomeScreen extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                              
-                              const SizedBox(height: 12), 
-
-                              // --- 2. TITRE MyINVENTORY ---
+                              const SizedBox(height: 12),
                               Text(
                                 'MyINVENTORY',
                                 style: theme.textTheme.displayLarge?.copyWith(
@@ -83,10 +76,7 @@ class HomeScreen extends StatelessWidget {
                                   color: Colors.white,
                                 ),
                               ),
-
-                              const SizedBox(height: 4), 
-
-                              // --- 3. SOUS-TITRE ---
+                              const SizedBox(height: 4),
                               Text(
                                 'Votre déménagement organisé',
                                 style: theme.textTheme.headlineMedium?.copyWith(
@@ -104,35 +94,7 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              // GradientHeader(
-              //   height: 300,
-              //   child: SafeArea(
-              //     child: Padding(
-              //       padding: const EdgeInsets.symmetric(
-              //         horizontal: 25.0,
-              //         vertical: 10.0,
-              //       ),
-              //       child: Column(
-              //         crossAxisAlignment: CrossAxisAlignment.start,
-              //         children: [
-              //           Text(
-              //             'MyInventory',
-              //             style: theme.textTheme.displayLarge,
-              //           ),
-              //           Text(
-              //             'Votre déménagement organisé',
-              //             style: theme.textTheme.headlineMedium,
-              //           ),
-              //           const SizedBox(height: 25),
-              //           _buildProgressSection(cartons.length),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              // ),
-
               const SizedBox(height: 20),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: TextField(
@@ -148,10 +110,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // CARTES DE STATISTIQUES
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Row(
@@ -176,9 +135,7 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
               const SizedBox(height: 25),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
                 child: Row(
@@ -192,14 +149,11 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // LISTE DES CARTONS AVEC LOGIQUE DE RECHERCHE D'OBJETS
               ...cartons.map((box) {
                 String? foundItem;
                 if (provider.searchQuery.isNotEmpty) {
-                  final match = box.items.where((item) => 
-                    item.name.toLowerCase().contains(provider.searchQuery.toLowerCase())
-                  );
+                  final match = box.items.where((item) =>
+                      item.name.toLowerCase().contains(provider.searchQuery.toLowerCase()));
                   if (match.isNotEmpty) {
                     foundItem = match.first.name;
                   }
@@ -219,16 +173,13 @@ class HomeScreen extends StatelessWidget {
                   subtitleAddition: foundItem != null ? 'Contient : $foundItem' : null,
                 );
               }),
-
               const SizedBox(height: 120),
             ],
           ),
         ),
-
         floatingActionButton: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // --- BOUTON SCAN AVEC ANIMATION ÉLASTIQUE ---
             TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 0.0, end: 1.0),
               duration: const Duration(milliseconds: 1000),
@@ -247,8 +198,6 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-
-            // --- BOUTON + AVEC ANIMATION ÉLASTIQUE ---
             TweenAnimationBuilder<double>(
               tween: Tween<double>(begin: 0.0, end: 1.0),
               duration: const Duration(milliseconds: 800),
@@ -268,52 +217,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // --- WIDGETS DE CONSTRUCTION ---
-
-  // Widget _buildProgressSection(int total) {
-  //   return Container(
-  //     padding: const EdgeInsets.all(15),
-  //     decoration: BoxDecoration(
-  //       color: AppColors.white.withOpacity(0.15),
-  //       borderRadius: BorderRadius.circular(20),
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             const Text(
-  //               'Progression',
-  //               style: TextStyle(
-  //                 color: AppColors.white,
-  //                 fontWeight: FontWeight.bold,
-  //               ),
-  //             ),
-  //             Text(
-  //               '$total cartons',
-  //               style: const TextStyle(color: AppColors.white, fontSize: 12),
-  //             ),
-  //           ],
-  //         ),
-  //         const SizedBox(height: 10),
-  //         const LinearProgressIndicator(
-  //           value: 0.3,
-  //           backgroundColor: Colors.white24,
-  //           valueColor: AlwaysStoppedAnimation<Color>(AppColors.success),
-  //           minHeight: 8,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  Widget _buildStatCard(
-    String value,
-    String label,
-    Color color,
-    IconData icon,
-  ) {
+  Widget _buildStatCard(String value, String label, Color color, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -339,15 +243,16 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildCartonItem(
-    String title, 
-    String roomLabel, 
-    int itemsCount, 
-    bool isFragile, 
-    VoidCallback onTap,
-    {String? subtitleAddition}
-  ) {
+    String title,
+    String roomLabel,
+    int itemsCount,
+    bool isFragile,
+    VoidCallback onTap, {
+    String? subtitleAddition,
+  }) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
         onTap: onTap,
         leading: Container(
@@ -358,28 +263,35 @@ class HomeScreen extends StatelessWidget {
           ),
           child: const Icon(Icons.inventory_2, color: AppColors.white),
         ),
-        title: Text(title),
+        title: Text(
+          title, 
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(roomLabel),
+            // Affichage du texte : Pièce • X objets
+            Text(
+              '$roomLabel • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}',
+              style: const TextStyle(fontSize: 13),
+            ),
             if (subtitleAddition != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
                   subtitleAddition,
                   style: const TextStyle(
-                    color: AppColors.statsBlue, 
+                    color: AppColors.statsBlue,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12
+                    fontSize: 12,
                   ),
                 ),
               ),
           ],
         ),
-        trailing: isFragile 
-          ? const Icon(Icons.warning_amber_rounded, color: AppColors.statsOrange)
-          : const Icon(Icons.chevron_right),
+        trailing: isFragile
+            ? const Icon(Icons.warning_amber_rounded, color: AppColors.statsOrange)
+            : const Icon(Icons.chevron_right),
       ),
     );
   }
