@@ -14,14 +14,21 @@ class HomeScreen extends  StatefulWidget {
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
+
 class _HomeScreenState extends State<HomeScreen> {
+  
   @override
-void initState() {
-  super.initState();
-  Future.microtask(() {
-    context.read<CartonProvider>().loadCartons();
+  void initState() {
+    super.initState();
+
+  // 🔥 Charger les cartons depuis SQLite
+    Future.microtask(() {
+      context.read<CartonProvider>().loadCartons();
   });
 }
+
+
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -64,26 +71,11 @@ void initState() {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               // --- 1. LOGO  ---
-                              Container(
-                                height: 60,
-                                width: 60,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(15),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                  ],
-                                  image: const DecorationImage(
-                                    image: AssetImage('assets/images/logo.png'),
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
+                              Image.asset(
+                                'assets/images/logo.png',
+                                height: 80, // Un peu plus grand puisqu'il n'y a plus de bordure
+                                fit: BoxFit.contain,
                               ),
-                              
                               const SizedBox(height: 12), 
 
                               // --- 2. TITRE MyINVENTORY ---
@@ -117,33 +109,7 @@ void initState() {
                   ],
                 ),
               ),
-              // GradientHeader(
-              //   height: 300,
-              //   child: SafeArea(
-              //     child: Padding(
-              //       padding: const EdgeInsets.symmetric(
-              //         horizontal: 25.0,
-              //         vertical: 10.0,
-              //       ),
-              //       child: Column(
-              //         crossAxisAlignment: CrossAxisAlignment.start,
-              //         children: [
-              //           Text(
-              //             'MyInventory',
-              //             style: theme.textTheme.displayLarge,
-              //           ),
-              //           Text(
-              //             'Votre déménagement organisé',
-              //             style: theme.textTheme.headlineMedium,
-              //           ),
-              //           const SizedBox(height: 25),
-              //           _buildProgressSection(cartons.length),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              // ),
-
+          
               const SizedBox(height: 20),
 
               Padding(
@@ -282,44 +248,6 @@ void initState() {
   }
 
   // --- WIDGETS DE CONSTRUCTION ---
-
-  // Widget _buildProgressSection(int total) {
-  //   return Container(
-  //     padding: const EdgeInsets.all(15),
-  //     decoration: BoxDecoration(
-  //       color: AppColors.white.withOpacity(0.15),
-  //       borderRadius: BorderRadius.circular(20),
-  //     ),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Row(
-  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //           children: [
-  //             const Text(
-  //               'Progression',
-  //               style: TextStyle(
-  //                 color: AppColors.white,
-  //                 fontWeight: FontWeight.bold,
-  //               ),
-  //             ),
-  //             Text(
-  //               '$total cartons',
-  //               style: const TextStyle(color: AppColors.white, fontSize: 12),
-  //             ),
-  //           ],
-  //         ),
-  //         const SizedBox(height: 10),
-  //         const LinearProgressIndicator(
-  //           value: 0.3,
-  //           backgroundColor: Colors.white24,
-  //           valueColor: AlwaysStoppedAnimation<Color>(AppColors.success),
-  //           minHeight: 8,
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildStatCard(
     String value,
