@@ -16,7 +16,7 @@ class HomeScreen extends  StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  
+
   @override
   void initState() {
     super.initState();
@@ -32,12 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    // On écoute le Provider pour avoir les données réelles (pas les mocks)
-    final cartonProvider = context.watch<CartonProvider>();
-
-    //final provider = context.watch<CartonProvider>();
-    final cartons = cartonProvider.cartons; // Utilise le getter qui applique la recherche et les filtres
+    final provider = context.watch<CartonProvider>();
+    final cartons = provider.cartons;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -70,13 +66,27 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // --- 1. LOGO  ---
-                              Image.asset(
-                                'assets/images/logo.png',
-                                height: 80, // Un peu plus grand puisqu'il n'y a plus de bordure
-                                fit: BoxFit.contain,
+                              Container(
+                                height: 60,
+                                width: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                  image: const DecorationImage(
+                                    image: AssetImage('assets/images/logo.png'),
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
                               ),
-                              const SizedBox(height: 12), 
+                              const SizedBox(height: 12),
+                              const SizedBox(height: 12),
 
                               // --- 2. TITRE MyINVENTORY ---
                               Text(
@@ -88,10 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: Colors.white,
                                 ),
                               ),
-
-                              const SizedBox(height: 4), 
-
-                              // --- 3. SOUS-TITRE ---
+                              const SizedBox(height: 4),
                               Text(
                                 'Votre déménagement organisé',
                                 style: theme.textTheme.headlineMedium?.copyWith(
@@ -109,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
-          
+
               const SizedBox(height: 20),
 
               Padding(
@@ -175,9 +182,9 @@ class _HomeScreenState extends State<HomeScreen> {
               // LISTE DES CARTONS AVEC LOGIQUE DE RECHERCHE D'OBJETS
               ...cartons.map((box) {
                 String? foundItem;
-                if (cartonProvider.searchQuery.isNotEmpty) {
+                if (provider.searchQuery.isNotEmpty) {
                   final match = box.items.where((item) => 
-                    item.name.toLowerCase().contains(cartonProvider.searchQuery.toLowerCase())
+                    item.name.toLowerCase().contains(provider.searchQuery.toLowerCase())
                   );
                   if (match.isNotEmpty) {
                     foundItem = match.first.name;
@@ -280,15 +287,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCartonItem(
-    String title, 
-    String roomLabel, 
-    int itemsCount, 
-    bool isFragile, 
-    VoidCallback onTap,
-    {String? subtitleAddition}
-  ) {
+    String title,
+    String roomLabel,
+    int itemsCount,
+    bool isFragile,
+    VoidCallback onTap, {
+    String? subtitleAddition,
+  }) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: ListTile(
         onTap: onTap,
         leading: Container(
@@ -299,28 +307,35 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           child: const Icon(Icons.inventory_2, color: AppColors.white),
         ),
-        title: Text(title),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(roomLabel),
+            // Affichage du texte : Pièce • X objets
+            Text(
+              '$roomLabel • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}',
+              style: const TextStyle(fontSize: 13),
+            ),
             if (subtitleAddition != null)
               Padding(
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
                   subtitleAddition,
                   style: const TextStyle(
-                    color: AppColors.statsBlue, 
+                    color: AppColors.statsBlue,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12
+                    fontSize: 12,
                   ),
                 ),
               ),
           ],
         ),
-        trailing: isFragile 
-          ? const Icon(Icons.warning_amber_rounded, color: AppColors.statsOrange)
-          : const Icon(Icons.chevron_right),
+        trailing: isFragile
+            ? const Icon(Icons.warning_amber_rounded, color: AppColors.statsOrange)
+            : const Icon(Icons.chevron_right),
       ),
     );
   }

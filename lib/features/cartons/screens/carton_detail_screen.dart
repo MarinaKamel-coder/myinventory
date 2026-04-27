@@ -1,43 +1,219 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
+import 'package:supermoms/features/items/widgets/item_tile.dart';
+import 'package:supermoms/shared/utils/local_photo_storage.dart';
+import 'package:supermoms/shared/utils/photo_image_provider.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
 
-
-
 class CartonDetailScreen extends StatefulWidget {
   const CartonDetailScreen({required this.box, super.key});
 
   final Carton box;
+
   @override
   State<CartonDetailScreen> createState() => _CartonDetailScreenState();
 }
 
 class _CartonDetailScreenState extends State<CartonDetailScreen> {
-  @override
-  void initState() {
-    super.initState();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
-    // Charger les items du carton depuis SQLite
-    Future.microtask(() {
-      context.read<ItemProvider>().loadItems(widget.box.id);
-    });
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
+
+  // Helper pour le design des champs Input
+  InputDecoration _dialogInputStyle(String label, IconData icon) => InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppColors.headerMid.withOpacity(0.7)),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+      );
+
+  // --- ACTIONS SUR LE CARTON ---
+
+  void _showDeleteCartonConfirmation(BuildContext context, String cartonId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Supprimer ce carton ?'),
+        content: const Text('Cela supprimera définitivement le carton et tout son contenu.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
+          TextButton(
+            onPressed: () {
+              context.read<ItemProvider>().removeAllItemsOfCarton(cartonId);
+              context.read<CartonProvider>().deleteCarton(cartonId);
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('SUPPRIMER', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditCartonDialog(BuildContext context, Carton box) {
+    final nameController = TextEditingController(text: box.name);
+    bool isFragile = box.fragile;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Modifier le carton'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: _dialogInputStyle('Nom du carton', Icons.inventory_2),
+              ),
+              const SizedBox(height: 10),
+              SwitchListTile(
+                title: const Text('Marquer comme fragile'),
+                secondary: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                value: isFragile,
+                activeColor: Colors.orange,
+                onChanged: (val) => setModalState(() => isFragile = val),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.headerMid,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  context.read<CartonProvider>().updateCarton(box.id, nameController.text, isFragile);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('ENREGISTRER'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- ACTIONS SUR LES ITEMS (AJOUT & MODIFICATION) ---
+
+  void _showItemForm(BuildContext context, {CartonItem? item, required String cartonId}) {
+    final isEditing = item != null;
+    final nameController = TextEditingController(text: item?.name ?? '');
+    final descController = TextEditingController(text: item?.description ?? '');
+    String? photoPath = item?.photo;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          title: Text(isEditing ? 'Modifier l\'objet' : 'Nouvel objet'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildDialogPhotoSelector(
+                  photoPath,
+                  onTap: () async {
+                    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+                    if (picked != null) {
+                      final storedPath = await persistPickedPhoto(picked);
+                      setModalState(() => photoPath = storedPath);
+                    }
+                  },
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  decoration: _dialogInputStyle('Nom de l\'objet', Icons.tag),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: descController,
+                  maxLines: 2,
+                  decoration: _dialogInputStyle('Description (facultatif)', Icons.notes),
+                ),
+              ],
+            ),
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          actions: [
+            if (isEditing)
+              TextButton(
+                onPressed: () {
+                  context.read<ItemProvider>().removeItem(item.id);
+                  Navigator.pop(context);
+                },
+                child: const Text('SUPPRIMER', style: TextStyle(color: Colors.red)),
+              ),
+            const Spacer(),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.headerMid,
+                foregroundColor: Colors.white, // Texte forcé en blanc
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                minimumSize: const Size(110, 45),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  final newItem = CartonItem(
+                    id: isEditing ? item.id : DateTime.now().toIso8601String(),
+                    cartonId: cartonId,
+                    name: nameController.text,
+                    description: descController.text,
+                    photo: photoPath,
+                  );
+                  isEditing
+                    ? context.read<ItemProvider>().updateItem(newItem)
+                    : context.read<ItemProvider>().addItem(newItem);
+                  Navigator.pop(context);
+                }
+              },
+              child: Text(isEditing ? 'ENREGISTRER' : 'AJOUTER'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<ItemProvider>();
-    final cartonProvider = context.watch<CartonProvider>();
-     final currentBox = cartonProvider.cartons.firstWhere(
-      (c) => c.id == widget.box.id,
-      orElse: () => widget.box,
-    );
-
+    final currentBox = context.watch<CartonProvider>().cartons.firstWhere((c) => c.id == box.id, orElse: () => box);
+    
+    // Récupérer les items du carton depuis le nouveau provider
     final items = itemProvider.getItemsByCartonId(currentBox.id);
 
     return Scaffold(

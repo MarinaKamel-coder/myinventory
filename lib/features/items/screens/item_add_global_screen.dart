@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
+import 'package:supermoms/shared/utils/local_photo_storage.dart';
+import 'package:supermoms/shared/utils/photo_image_provider.dart';
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/models/room.dart';
@@ -29,6 +32,9 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
   final _newCartonNameController = TextEditingController();
   Room _selectedRoom = Room.salon;
   final bool _isFragile = false;
+  final ImagePicker _picker = ImagePicker();
+
+  String? _photoPath;
 
   @override
   Widget build(BuildContext context) {
@@ -184,36 +190,64 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
     ),
   );
 
-  Widget _buildPhotoSelector() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      const Text("Photo de l'objet (optionnel)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textMain)),
-      const SizedBox(height: 10),
-      GestureDetector(
-        onTap: () {
-          // Simulation de prise de photo pour le moment
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Ouverture de l'appareil photo...")));
-        },
-        child: Container(
-          width: double.infinity,
-          height: 100,
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: Colors.grey.shade200, width: 2),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.camera_alt_outlined, color: Colors.grey.shade400, size: 30),
-              const SizedBox(height: 5),
-              Text('Ajouter une photo', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-            ],
+  Widget _buildPhotoSelector() {
+    final imageProvider = buildPhotoImageProvider(_photoPath);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text("Photo de l'objet (optionnel)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textMain)),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: _pickPhoto,
+          child: Container(
+            width: double.infinity,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.grey.shade200, width: 2),
+            ),
+            child: imageProvider == null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.camera_alt_outlined, color: Colors.grey.shade400, size: 30),
+                      const SizedBox(height: 5),
+                      Text('Ajouter une photo', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                    ],
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image(
+                      image: imageProvider,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                    ),
+                  ),
           ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
+
+  Future<void> _pickPhoto() async {
+    final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null) return;
+
+    final storedPath = await persistPickedPhoto(picked);
+    if (!mounted) return;
+
+    if (storedPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de sauvegarder la photo localement.')),
+      );
+      return;
+    }
+
+    setState(() => _photoPath = storedPath);
+  }
 
   void _handleSubmit(BuildContext context) {
     if (_itemNameController.text.isEmpty) return;
@@ -246,6 +280,7 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
       cartonId: targetCartonId,
       name: _itemNameController.text,
       description: _itemDescController.text,
+      photo: _photoPath,
     );
 
     // 3. Mettre à jour via le nouveau ItemProvider

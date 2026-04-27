@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
+import 'package:supermoms/shared/utils/photo_image_provider.dart';
 
 class ItemTile extends StatelessWidget {
   const ItemTile({
@@ -18,6 +19,7 @@ class ItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final imageProvider = buildPhotoImageProvider(imageUrl);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -42,21 +44,21 @@ class ItemTile extends StatelessWidget {
                 ),
               ],
               // Dégradé si pas d'image
-              gradient: imageUrl == null
+              gradient: imageProvider == null
                   ? const LinearGradient(
                       colors: [AppColors.fabStart, AppColors.fabEnd],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     )
                   : null,
-              image: imageUrl != null
+              image: imageProvider != null
                   ? DecorationImage(
-                      image: NetworkImage(imageUrl!),
+                      image: imageProvider,
                       fit: BoxFit.cover,
                     )
                   : null,
             ),
-            child: imageUrl == null && quantity != null
+            child: imageProvider == null && quantity != null
                 ? Center(
                     child: Text(
                       '$quantity',
