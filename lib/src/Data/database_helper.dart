@@ -19,7 +19,15 @@ class DatabaseHelper {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = join(dir.path, "supermoms.db");
 
-    return await openDatabase(path, version: 1, onCreate: _createTables);
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createTables,
+      //  Active les clés étrangères pour le ON DELETE CASCADE
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+    );
   }
 
   Future _createTables(Database db, int version) async {

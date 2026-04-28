@@ -206,7 +206,9 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
       );
 
   Widget _buildCreateCartonButton(BuildContext context) => GestureDetector(
-        onTap: () {
+
+
+    onTap: ()async  {
           if (_cartonNameController.text.isNotEmpty) {
             final cartonId = DateTime.now().toString();
             final newCarton = Carton(
@@ -217,7 +219,7 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
               items: List<CartonItem>.from(_addedItems.map((item) => item.copyWith(cartonId: cartonId))),
               createdAt: DateTime.now(),
             );
-            context.read<CartonProvider>().addCarton(newCarton);
+            await context.read<CartonProvider>().addCarton(newCarton);
             Navigator.pop(context);
           }
         },

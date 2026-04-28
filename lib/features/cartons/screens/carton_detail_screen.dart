@@ -22,213 +22,66 @@ class CartonDetailScreen extends StatefulWidget {
 }
 
 class _CartonDetailScreenState extends State<CartonDetailScreen> {
-  final TextEditingController _searchController = TextEditingController();
-
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    // Charger les items au démarrage
+    Future.microtask(() => context.read<ItemProvider>().loadItems(widget.box.id));
   }
 
-  // --- ACTIONS SUR LE CARTON ---
+  // --- ACTIONS ---
 
-  void _showDeleteCartonConfirmation(BuildContext context, String cartonId) {
-    showDialog(
+  Future<void> _handleDeleteCarton(BuildContext context, String cartonId) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Supprimer ce carton ?'),
         content: const Text('Cela supprimera définitivement le carton et tout son contenu.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('ANNULER')),
           TextButton(
-            onPressed: () {
-              context.read<CartonProvider>().deleteCarton(cartonId);
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('SUPPRIMER', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
-  }
 
-  void _showEditCartonDialog(BuildContext context, Carton box) {
-    final nameController = TextEditingController(text: box.name);
-    bool isFragile = box.fragile;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Modifier le carton'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: _dialogInputStyle('Nom du carton', Icons.inventory_2),
-              ),
-              const SizedBox(height: 10),
-              SwitchListTile(
-                title: const Text('Marquer comme fragile'),
-                secondary: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                value: isFragile,
-                activeColor: Colors.orange,
-                onChanged: (val) => setModalState(() => isFragile = val),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.headerMid,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  final updatedBox = box.copyWith(
-                    name: nameController.text,
-                    fragile: isFragile,
-                  );
-                  context.read<CartonProvider>().updateCarton(updatedBox);
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('ENREGISTRER'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // --- ACTIONS SUR LES ITEMS (AJOUT & MODIFICATION) ---
-
-  void _showItemForm(BuildContext context, {CartonItem? item, required String cartonId}) {
-    final isEditing = item != null;
-    final nameController = TextEditingController(text: item?.name ?? '');
-    final descController = TextEditingController(text: item?.description ?? '');
-    String? photoPath = item?.photo;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-          title: Text(isEditing ? 'Modifier l\'objet' : 'Nouvel objet'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildDialogPhotoSelector(
-                  photoPath,
-                  onTap: () async {
-                    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
-                    if (picked != null) {
-                      final storedPath = await persistPickedPhoto(picked);
-                      setModalState(() => photoPath = storedPath);
-                    }
-                  },
-                ),
-                const SizedBox(height: 20),
-                TextField(controller: nameController, decoration: _dialogInputStyle('Nom de l\'objet', Icons.tag)),
-                const SizedBox(height: 15),
-                TextField(controller: descController, maxLines: 2, decoration: _dialogInputStyle('Description', Icons.notes)),
-              ],
-            ),
-          ),
-          actions: [
-            if (isEditing)
-              TextButton(
-                onPressed: () {
-                  context.read<ItemProvider>().removeItem(item.id);
-                  Navigator.pop(context);
-                },
-                child: const Text('SUPPRIMER', style: TextStyle(color: Colors.red)),
-              ),
-            const Spacer(),
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.headerMid,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                if (nameController.text.isNotEmpty) {
-                  final newItem = CartonItem(
-                    id: isEditing ? item.id : DateTime.now().toIso8601String(),
-                    cartonId: cartonId,
-                    name: nameController.text,
-                    description: descController.text,
-                    photo: photoPath,
-                  );
-                  isEditing 
-                    ? context.read<ItemProvider>().updateItem(newItem) 
-                    : context.read<ItemProvider>().addItem(newItem);
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(isEditing ? 'ENREGISTRER' : 'AJOUTER'),
-            ),
-          ],
-        ),
-      ),
-    );
+    if (confirmed == true && mounted) {
+      await context.read<CartonProvider>().deleteCarton(cartonId);
+      if (mounted) Navigator.pop(context); // Retour à la liste
+    }
   }
 
   // --- WIDGETS DE CONSTRUCTION ---
 
-  Widget _buildDialogPhotoSelector(String? photoPath, {required VoidCallback onTap}) {
-    final provider = buildPhotoImageProvider(photoPath);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 120,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: provider != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image(image: provider, fit: BoxFit.cover),
-              )
-            : const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40),
-                  SizedBox(height: 8),
-                  Text('Ajouter une photo', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-      ),
-    );
-  }
-
-  InputDecoration _dialogInputStyle(String label, IconData icon) => InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.headerMid.withOpacity(0.7)),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey.shade200)),
+  Widget _buildWinkAnimation({required Widget child, int delayMs = 0}) => TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.elasticOut,
+        builder: (context, value, child) {
+          // L'effet de balancement élastique original (rotation + scale)
+          final rotation = (1.0 - value) * -0.15;
+          return Transform.rotate(
+            angle: rotation,
+            child: Transform.scale(scale: value, child: child),
+          );
+        },
+        child: child,
       );
 
   @override
   Widget build(BuildContext context) {
+    final cartonProvider = context.watch<CartonProvider>();
     final itemProvider = context.watch<ItemProvider>();
-    final currentBox = context.watch<CartonProvider>().cartons.firstWhere(
-      (c) => c.id == widget.box.id, 
-      orElse: () => widget.box
+
+    // On récupère la version à jour du carton
+    final currentBox = cartonProvider.cartons.firstWhere(
+      (c) => c.id == widget.box.id,
+      orElse: () => widget.box,
     );
-    
+
     final items = itemProvider.getItemsByCartonId(currentBox.id);
 
     return Scaffold(
@@ -263,7 +116,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                   _buildWinkAnimation(
                     delayMs: 300,
                     child: GestureDetector(
-                      onTap: () => _showDeleteCartonConfirmation(context, currentBox.id),
+                      onTap: () => _handleDeleteCarton(context, currentBox.id),
                       child: _buildDeleteButton(),
                     ),
                   ),
@@ -278,7 +131,15 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
           ],
         ),
       ),
-      floatingActionButton: _buildAnimatedFAB(context, currentBox.id),
+      floatingActionButton: _buildWinkAnimation(
+        delayMs: 500,
+        child: FloatingActionButton.extended(
+          onPressed: () => _showItemForm(context, cartonId: currentBox.id),
+          label: const Text('Ajouter un objet'),
+          icon: const Icon(Icons.add),
+          backgroundColor: AppColors.headerMid,
+        ),
+      ),
     );
   }
 
@@ -287,20 +148,25 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.inventory_2, color: Colors.white, size: 30),
                   const SizedBox(width: 15),
-                  Text(box.name, style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 24)),
+                  Flexible(
+                    child: Text(
+                      box.name,
+                      style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 24),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -324,8 +190,8 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
       );
 
   Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) => GestureDetector(
-    onTap: onTap,
-    child: Container(
+        onTap: onTap,
+        child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: color,
@@ -341,7 +207,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
             ],
           ),
         ),
-  );
+      );
 
   Widget _buildDeleteButton() => Container(
         width: double.infinity,
@@ -369,7 +235,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildInfoRow('ID:', '${box.id.substring(0, 8)}...', isGrey: true),
+                  _buildInfoRow('ID:', box.id.length > 8 ? '${box.id.substring(0, 8)}...' : box.id, isGrey: true),
                   const Divider(),
                   _buildInfoRow('Créé le:', DateFormat('dd/MM/yyyy').format(box.createdAt)),
                   const Divider(),
@@ -400,9 +266,14 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                   return ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: photoProvider != null 
-                        ? Image(image: photoProvider, width: 50, height: 50, fit: BoxFit.cover)
-                        : Container(width: 50, height: 50, color: Colors.grey.shade100, child: const Icon(Icons.image_outlined, color: Colors.grey)),
+                      child: photoProvider != null
+                          ? Image(image: photoProvider, width: 50, height: 50, fit: BoxFit.cover)
+                          : Container(
+                              width: 50,
+                              height: 50,
+                              color: Colors.grey.shade100,
+                              child: const Icon(Icons.image_outlined, color: Colors.grey),
+                            ),
                     ),
                     title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(item.description ?? 'Aucune description'),
@@ -435,7 +306,10 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label, style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
-            Text(value, style: TextStyle(fontWeight: isBoldValue ? FontWeight.bold : FontWeight.normal, color: valueColor ?? Colors.black87)),
+            Text(value,
+                style: TextStyle(
+                    fontWeight: isBoldValue ? FontWeight.bold : FontWeight.normal,
+                    color: valueColor ?? Colors.black87)),
           ],
         ),
       );
@@ -446,21 +320,141 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
       );
 
-  Widget _buildWinkAnimation({required Widget child, int delayMs = 0}) => TweenAnimationBuilder<double>(
-        tween: Tween<double>(begin: 0.0, end: 1.0),
-        duration: const Duration(milliseconds: 1000),
-        curve: Curves.elasticOut,
-        builder: (context, value, child) => Transform.scale(scale: value, child: child),
-        child: child,
-      );
+  void _showEditCartonDialog(BuildContext context, Carton box) {
+    final nameController = TextEditingController(text: box.name);
+    bool isFragile = box.fragile;
 
-  Widget _buildAnimatedFAB(BuildContext context, String cartonId) => _buildWinkAnimation(
-        delayMs: 500,
-        child: FloatingActionButton.extended(
-          onPressed: () => _showItemForm(context, cartonId: cartonId),
-          label: const Text('Ajouter un objet'),
-          icon: const Icon(Icons.add),
-          backgroundColor: AppColors.headerMid,
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Modifier le carton'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Nom du carton',
+                  prefixIcon: const Icon(Icons.inventory_2),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SwitchListTile(
+                title: const Text('Marquer comme fragile'),
+                value: isFragile,
+                activeColor: Colors.orange,
+                onChanged: (val) => setModalState(() => isFragile = val),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isNotEmpty) {
+                  final updatedBox = box.copyWith(name: nameController.text, fragile: isFragile);
+                  await context.read<CartonProvider>().updateCarton(updatedBox);
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Text('ENREGISTRER'),
+            ),
+          ],
         ),
-      );
+      ),
+    );
+  }
+
+  void _showItemForm(BuildContext context, {CartonItem? item, required String cartonId}) {
+    final isEditing = item != null;
+    final nameController = TextEditingController(text: item?.name ?? '');
+    final descController = TextEditingController(text: item?.description ?? '');
+    String? photoPath = item?.photo;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+          title: Text(isEditing ? 'Modifier l\'objet' : 'Nouvel objet'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+                    if (picked != null) {
+                      final storedPath = await persistPickedPhoto(picked);
+                      setModalState(() => photoPath = storedPath);
+                    }
+                  },
+                  child: Container(
+                    height: 100,
+                    width: double.infinity,
+                    decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(15)),
+                    child: photoPath != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(15),
+                            child: Image(image: buildPhotoImageProvider(photoPath)!, fit: BoxFit.cover),
+                          )
+                        : const Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(labelText: 'Nom de l\'objet', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                ),
+                const SizedBox(height: 15),
+                TextField(
+                  controller: descController,
+                  maxLines: 2,
+                  decoration: InputDecoration(labelText: 'Description', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            if (isEditing)
+              TextButton(
+                onPressed: () async {
+                  await context.read<ItemProvider>().removeItem(item.id);
+                  // 🔥 SYNCHRO : On demande au CartonProvider de rafraîchir sa liste pour le Home
+                  await context.read<CartonProvider>().loadCartons();
+                  if (context.mounted) Navigator.pop(context);
+                },
+                child: const Text('SUPPRIMER', style: TextStyle(color: Colors.red)),
+              ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isNotEmpty) {
+                  final newItem = CartonItem(
+                    id: isEditing ? item.id : DateTime.now().toIso8601String(),
+                    cartonId: cartonId,
+                    name: nameController.text,
+                    description: descController.text,
+                    photo: photoPath,
+                  );
+                  if (isEditing) {
+                    await context.read<ItemProvider>().updateItem(newItem);
+                  } else {
+                    await context.read<ItemProvider>().addItem(newItem);
+                  }
+                  // 🔥 SYNCHRO : On demande au CartonProvider de rafraîchir sa liste pour le Home
+                  await context.read<CartonProvider>().loadCartons();
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: Text(isEditing ? 'ENREGISTRER' : 'AJOUTER'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
