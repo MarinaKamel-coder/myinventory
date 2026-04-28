@@ -11,6 +11,7 @@ import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class CartonDetailScreen extends StatefulWidget {
   const CartonDetailScreen({required this.box, super.key});
@@ -30,7 +31,15 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
     super.dispose();
   }
 
-  // --- ACTIONS SUR LE CARTON ---
+  InputDecoration _dialogInputStyle(String label, IconData icon) => InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppColors.headerMid.withOpacity(0.7)),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey.shade200)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey.shade200)),
+      );
 
   void _showDeleteCartonConfirmation(BuildContext context, String cartonId) {
     showDialog(
@@ -91,10 +100,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
               ),
               onPressed: () {
                 if (nameController.text.isNotEmpty) {
-                  final updatedBox = box.copyWith(
-                    name: nameController.text,
-                    fragile: isFragile,
-                  );
+                  final updatedBox = box.copyWith(name: nameController.text, fragile: isFragile);
                   context.read<CartonProvider>().updateCarton(updatedBox);
                   Navigator.pop(context);
                 }
@@ -106,8 +112,6 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
       ),
     );
   }
-
-  // --- ACTIONS SUR LES ITEMS (AJOUT & MODIFICATION) ---
 
   void _showItemForm(BuildContext context, {CartonItem? item, required String cartonId}) {
     final isEditing = item != null;
@@ -157,6 +161,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.headerMid,
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () {
                 if (nameController.text.isNotEmpty) {
@@ -181,46 +186,6 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
     );
   }
 
-  // --- WIDGETS DE CONSTRUCTION ---
-
-  Widget _buildDialogPhotoSelector(String? photoPath, {required VoidCallback onTap}) {
-    final provider = buildPhotoImageProvider(photoPath);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 120,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: provider != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: Image(image: provider, fit: BoxFit.cover),
-              )
-            : const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40),
-                  SizedBox(height: 8),
-                  Text('Ajouter une photo', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-      ),
-    );
-  }
-
-  InputDecoration _dialogInputStyle(String label, IconData icon) => InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: AppColors.headerMid.withOpacity(0.7)),
-        filled: true,
-        fillColor: Colors.grey.shade50,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide(color: Colors.grey.shade200)),
-      );
-
   @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<ItemProvider>();
@@ -228,7 +193,6 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
       (c) => c.id == widget.box.id, 
       orElse: () => widget.box
     );
-    
     final items = itemProvider.getItemsByCartonId(currentBox.id);
 
     return Scaffold(
@@ -243,32 +207,20 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: _buildWinkAnimation(
-                          child: _buildActionButton('Étiquette PDF', Icons.download, const Color(0xFF27AE60), () {}),
-                        ),
-                      ),
+                      Expanded(child: _buildActionButton('Étiquette PDF', Icons.download, const Color(0xFF27AE60), () {})),
                       const SizedBox(width: 15),
-                      Expanded(
-                        child: _buildWinkAnimation(
-                          delayMs: 150,
-                          child: _buildActionButton('Modifier', Icons.edit_note, const Color(0xFF7F56D9), () {
-                            _showEditCartonDialog(context, currentBox);
-                          }),
-                        ),
-                      ),
+                      Expanded(child: _buildActionButton('Modifier', Icons.edit_note, const Color(0xFF7F56D9), () => _showEditCartonDialog(context, currentBox))),
                     ],
                   ),
                   const SizedBox(height: 15),
-                  _buildWinkAnimation(
-                    delayMs: 300,
-                    child: GestureDetector(
-                      onTap: () => _showDeleteCartonConfirmation(context, currentBox.id),
-                      child: _buildDeleteButton(),
-                    ),
+                  GestureDetector(
+                    onTap: () => _showDeleteCartonConfirmation(context, currentBox.id),
+                    child: _buildDeleteButton(),
                   ),
                   const SizedBox(height: 25),
-                  _buildInfoSection(currentBox, items),
+                  _buildQrCodeSection(currentBox),
+                  const SizedBox(height: 25),
+                  _buildInfoSection(currentBox, items.length),
                   const SizedBox(height: 25),
                   _buildContentSection(context, currentBox, items),
                   const SizedBox(height: 100),
@@ -283,84 +235,68 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
   }
 
   Widget _buildHeader(BuildContext context, Carton box) => GradientHeader(
-        height: 200,
+        height: 240,
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.inventory_2, color: Colors.white, size: 30),
-                  const SizedBox(width: 15),
-                  Text(box.name, style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 24)),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(box.room.label, style: const TextStyle(color: Colors.white70, fontSize: 16)),
-                  if (box.fragile) ...[
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(5)),
-                      child: const Text('FRAGILE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(child: Text(box.name, style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 26), overflow: TextOverflow.ellipsis)),
+                        if (box.fragile) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.warning_amber_rounded, color: Colors.orangeAccent),
+                        ],
+                      ],
                     ),
-                  ]
-                ],
+                    Text(box.room.label, style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                  ],
+                ),
               ),
             ],
           ),
         ),
       );
 
-  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white, size: 18),
-              const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-  );
-
-  Widget _buildDeleteButton() => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFFFF5F6D), Color(0xFFFFC371)]),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildQrCodeSection(Carton box) => Container(
+        decoration: _cardDecoration(),
+        child: Column(
           children: [
-            Icon(Icons.delete_outline, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Supprimer le carton', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            _buildSectionHeader('Code QR', Icons.qr_code_2, const Color(0xFF4A90E2)),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  QrImageView(
+                    data: box.id,
+                    version: QrVersions.auto,
+                    size: 200.0,
+                    errorCorrectionLevel: QrErrorCorrectLevel.H,
+                    backgroundColor: Colors.white,
+                    embeddedImage: const AssetImage('assets/images/logo.png'),
+                    embeddedImageStyle: const QrEmbeddedImageStyle(size: Size(50, 50)),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text('Scannez ce code pour identifier le carton', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                ],
+              ),
+            ),
           ],
         ),
       );
 
-  Widget _buildInfoSection(Carton box, List<CartonItem> items) => Container(
+  Widget _buildInfoSection(Carton box, int totalItems) => Container(
         decoration: _cardDecoration(),
         child: Column(
           children: [
@@ -369,14 +305,14 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  _buildInfoRow('ID:', '${box.id.substring(0, 8)}...', isGrey: true),
+                  _buildInfoRow('ID:', box.id.substring(0, 8), isGrey: true),
                   const Divider(),
-                  _buildInfoRow('Créé le:', DateFormat('dd/MM/yyyy').format(box.createdAt)),
+                  _buildInfoRow('Créé le:', DateFormat('dd MMM yyyy').format(box.createdAt)),
                   const Divider(),
-                  _buildInfoRow("Nombre d'objets:", items.length.toString(), isBoldValue: true, valueColor: Colors.green),
+                  _buildInfoRow("Objets:", totalItems.toString(), isBoldValue: true),
                 ],
               ),
-            )
+            ),
           ],
         ),
       );
@@ -385,9 +321,22 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
         decoration: _cardDecoration(),
         child: Column(
           children: [
-            _buildSectionHeader('Contenu du carton (${items.length})', Icons.inventory, const Color(0xFFF06292)),
+            _buildSectionHeader('Contenu (${items.length})', Icons.inventory, const Color(0xFFF06292)),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Rechercher un objet...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+            ),
             if (items.isEmpty)
-              const Padding(padding: EdgeInsets.all(30), child: Text('Aucun objet', style: TextStyle(color: Colors.grey)))
+              const Padding(padding: EdgeInsets.all(20), child: Text('Aucun objet trouvé'))
             else
               ListView.separated(
                 shrinkWrap: true,
@@ -414,39 +363,53 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
         ),
       );
 
+  Widget _buildDialogPhotoSelector(String? path, {required VoidCallback onTap}) {
+    final provider = buildPhotoImageProvider(path);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 120, width: double.infinity,
+        decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.shade300)),
+        child: provider != null
+            ? ClipRRect(borderRadius: BorderRadius.circular(15), child: Image(image: provider, fit: BoxFit.cover))
+            : const Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40), Text('Ajouter une photo', style: TextStyle(color: Colors.grey))]),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: Colors.white, size: 18), const SizedBox(width: 8), Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
+        ),
+      );
+
+  Widget _buildDeleteButton() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFFF5F6D), Color(0xFFFFC371)]), borderRadius: BorderRadius.circular(12)),
+        child: const Center(child: Text('Supprimer le carton', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+      );
+
   Widget _buildSectionHeader(String title, IconData icon, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ],
-        ),
+        decoration: BoxDecoration(color: color, borderRadius: const BorderRadius.vertical(top: Radius.circular(20))),
+        child: Row(children: [Icon(icon, color: Colors.white, size: 20), const SizedBox(width: 10), Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
       );
 
-  Widget _buildInfoRow(String label, String value, {bool isGrey = false, bool isBoldValue = false, Color? valueColor}) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label, style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
-            Text(value, style: TextStyle(fontWeight: isBoldValue ? FontWeight.bold : FontWeight.normal, color: valueColor ?? Colors.black87)),
-          ],
-        ),
+  Widget _buildInfoRow(String label, String value, {bool isGrey = false, bool isBoldValue = false}) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey.shade600)),
+          Text(value, style: TextStyle(fontWeight: isBoldValue ? FontWeight.bold : FontWeight.normal, color: isGrey ? Colors.grey : Colors.black)),
+        ],
       );
 
-  BoxDecoration _cardDecoration() => BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-      );
+  BoxDecoration _cardDecoration() => BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]);
 
-  Widget _buildWinkAnimation({required Widget child, int delayMs = 0}) => TweenAnimationBuilder<double>(
+  Widget _buildWinkAnimation({required Widget child}) => TweenAnimationBuilder<double>(
         tween: Tween<double>(begin: 0.0, end: 1.0),
         duration: const Duration(milliseconds: 1000),
         curve: Curves.elasticOut,
@@ -455,7 +418,6 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
       );
 
   Widget _buildAnimatedFAB(BuildContext context, String cartonId) => _buildWinkAnimation(
-        delayMs: 500,
         child: FloatingActionButton.extended(
           onPressed: () => _showItemForm(context, cartonId: cartonId),
           label: const Text('Ajouter un objet'),
