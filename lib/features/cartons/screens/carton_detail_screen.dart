@@ -1,9 +1,15 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
+import 'package:supermoms/shared/utils/carton_label_pdf.dart';
 import 'package:supermoms/shared/utils/local_photo_storage.dart';
 import 'package:supermoms/shared/utils/photo_image_provider.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
@@ -11,7 +17,6 @@ import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 class CartonDetailScreen extends StatefulWidget {
   const CartonDetailScreen({required this.box, super.key});
@@ -186,6 +191,43 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
     );
   }
 
+  Future<void> _exportEtiquettePdf(BuildContext context, Carton box) async {
+    final navigator = Navigator.of(context);
+    unawaited(
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const PopScope(
+          canPop: false,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+    );
+    try {
+      final itemProvider = context.read<ItemProvider>();
+      await itemProvider.loadItems(box.id);
+      final itemCount = itemProvider.getItemsByCartonId(box.id).length;
+      final bytes = await buildCartonLabelPdf(box, itemCount: itemCount);
+      navigator.pop();
+      try {
+        await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => bytes);
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Impression / aperçu : $e')),
+          );
+        }
+      }
+    } catch (e) {
+      navigator.pop();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible de générer l\'étiquette : $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final itemProvider = context.watch<ItemProvider>();
@@ -207,7 +249,14 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(child: _buildActionButton('Étiquette PDF', Icons.download, const Color(0xFF27AE60), () {})),
+                      Expanded(
+                        child: _buildActionButton(
+                          'Étiquette PDF',
+                          Icons.download,
+                          const Color(0xFF27AE60),
+                          () => _exportEtiquettePdf(context, currentBox),
+                        ),
+                      ),
                       const SizedBox(width: 15),
                       Expanded(child: _buildActionButton('Modifier', Icons.edit_note, const Color(0xFF7F56D9), () => _showEditCartonDialog(context, currentBox))),
                     ],
