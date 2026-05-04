@@ -175,7 +175,7 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
   );
 
   Widget _buildSubmitButton(BuildContext context) => GestureDetector(
-    onTap: () => _handleSubmit(context),
+    onTap: () => _handleSubmit(),
     child: Container(
       width: double.infinity,
       height: 60,
@@ -249,7 +249,7 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
     setState(() => _photoPath = storedPath);
   }
 
-  void _handleSubmit(BuildContext context) {
+  Future<void> _handleSubmit() async {
     if (_itemNameController.text.isEmpty) return;
 
     final cartonProvider = context.read<CartonProvider>();
@@ -267,7 +267,7 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
         items: [],
         createdAt: DateTime.now(),
       );
-      cartonProvider.addCarton(newCarton);
+      await cartonProvider.addCarton(newCarton);
       targetCartonId = newCarton.id;
     } else {
       if (_selectedCarton == null) return;
@@ -276,7 +276,7 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
 
     // 2. Préparer l'objet
     final newItem = CartonItem(
-      id: DateTime.now().toString(),
+      id: DateTime.now().toIso8601String(),
       cartonId: targetCartonId,
       name: _itemNameController.text,
       description: _itemDescController.text,
@@ -284,8 +284,9 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
     );
 
     // 3. Mettre à jour via le nouveau ItemProvider
-    itemProvider.addItem(newItem);
+    await itemProvider.addItem(newItem);
 
+    if (!mounted) return;
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Objet '${newItem.name}' ajouté avec succès !"), backgroundColor: AppColors.success),

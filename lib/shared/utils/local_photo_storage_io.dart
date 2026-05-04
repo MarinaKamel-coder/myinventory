@@ -16,8 +16,10 @@ Future<String?> persistPickedPhoto(XFile pickedFile) async {
         sourcePath.contains('.') ? sourcePath.substring(sourcePath.lastIndexOf('.')) : '.jpg';
     final outputPath = '${photoDir.path}/item_${DateTime.now().millisecondsSinceEpoch}$extension';
 
-    final copied = await File(sourcePath).copy(outputPath);
-    return copied.path;
+    // readAsBytes() fonctionne avec les file paths ET les content URIs Android
+    final bytes = await pickedFile.readAsBytes();
+    await File(outputPath).writeAsBytes(bytes);
+    return outputPath;
   } catch (_) {
     return null;
   }
