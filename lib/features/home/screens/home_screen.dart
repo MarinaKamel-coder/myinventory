@@ -44,7 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             children: [
               GradientHeader(
-                height: 220,
+                height: 250,
                 child: Stack(
                   children: [
                     Positioned(
@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     SafeArea(
                       child: Center(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20.0),
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 8),
                               Text(
                                 'MyINVENTORY',
                                 style: theme.textTheme.displayLarge?.copyWith(

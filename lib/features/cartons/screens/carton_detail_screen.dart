@@ -11,6 +11,7 @@ import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class CartonDetailScreen extends StatefulWidget {
   const CartonDetailScreen({required this.box, super.key});
@@ -121,6 +122,8 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 25),
+                  _buildQrCodeSection(currentBox),
+                  const SizedBox(height: 25),
                   _buildInfoSection(currentBox, items),
                   const SizedBox(height: 25),
                   _buildContentSection(context, currentBox, items),
@@ -189,7 +192,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
         ),
       );
 
-  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) => GestureDetector(
+ /* Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) => GestureDetector(
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -207,7 +210,7 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
             ],
           ),
         ),
-      );
+      );*/
 
   Widget _buildDeleteButton() => Container(
         width: double.infinity,
@@ -285,6 +288,36 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
         ),
       );
 
+  Widget _buildDialogPhotoSelector(String? path, {required VoidCallback onTap}) {
+    final provider = buildPhotoImageProvider(path);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 120, width: double.infinity,
+        decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey.shade300)),
+        child: provider != null
+            ? ClipRRect(borderRadius: BorderRadius.circular(15), child: Image(image: provider, fit: BoxFit.cover))
+            : const Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40), Text('Ajouter une photo', style: TextStyle(color: Colors.grey))]),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
+          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(icon, color: Colors.white, size: 18), const SizedBox(width: 8), Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]),
+        ),
+      );
+
+  /*Widget _buildDeleteButton() => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFFF5F6D), Color(0xFFFFC371)]), borderRadius: BorderRadius.circular(12)),
+        child: const Center(child: Text('Supprimer le carton', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+      );*/
+
   Widget _buildSectionHeader(String title, IconData icon, Color color) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         decoration: BoxDecoration(
@@ -299,6 +332,33 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
           ],
         ),
       );
+  Widget _buildQrCodeSection(Carton box) => Container(
+    decoration: _cardDecoration(),
+    child: Column(
+      children: [
+        _buildSectionHeader('Code QR', Icons.qr_code_2, const Color(0xFF4A90E2)),
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            children: [
+              QrImageView(
+                data: box.id,
+                version: QrVersions.auto,
+                size: 200.0,
+                errorCorrectionLevel: QrErrorCorrectLevel.H,
+                backgroundColor: Colors.white,
+                embeddedImage: const AssetImage('assets/images/logo.png'),
+                embeddedImageStyle: const QrEmbeddedImageStyle(size: Size(50, 50)),
+              ),
+              const SizedBox(height: 10),
+              const Text('Scannez ce code pour identifier le carton', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
 
   Widget _buildInfoRow(String label, String value, {bool isGrey = false, bool isBoldValue = false, Color? valueColor}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
