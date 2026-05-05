@@ -140,7 +140,9 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
                     if (picked != null) {
                       final storedPath = await persistPickedPhoto(picked);
-                      setModalState(() => photoPath = storedPath);
+                      if (storedPath != null) {
+                        setModalState(() => photoPath = storedPath);
+                      }
                     }
                   },
                 ),
