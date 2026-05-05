@@ -82,4 +82,12 @@ class CartonProvider extends ChangeNotifier {
   // Stats
   int get totalCartons => _cartons.length;
   int get fragileCount => _cartons.where((c) => c.fragile).length;
+
+  Carton? findById(String id) {
+    try {
+      return _cartons.firstWhere((carton) => carton.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
 }
