@@ -6,7 +6,12 @@ import 'package:supermoms/src/models/room.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 
 class CartonListScreen extends StatelessWidget {
-  const CartonListScreen({super.key});
+  const CartonListScreen({
+    super.key,
+    this.showBackButton = true,
+  });
+
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -15,14 +20,18 @@ class CartonListScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tous les cartons', 
-          style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
+        automaticallyImplyLeading: showBackButton,
+        title: const Text('Tous les cartons',
+            style:
+                TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textMain),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: showBackButton
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.textMain),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
       ),
       body: cartons.isEmpty
           ? const Center(child: Text("Aucun carton trouvé"))
@@ -48,8 +57,8 @@ class CartonListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCartonItem(
-      BuildContext context, String title, Room room, int itemsCount, bool isFragile, VoidCallback onTap) {
+  Widget _buildCartonItem(BuildContext context, String title, Room room,
+      int itemsCount, bool isFragile, VoidCallback onTap) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
