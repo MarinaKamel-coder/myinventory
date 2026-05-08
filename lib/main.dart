@@ -13,6 +13,7 @@ import 'package:supermoms/features/scanner/screens/scan_carton_screen.dart';
 import 'package:supermoms/src/providers/auth_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
+import 'package:supermoms/src/providers/user_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +25,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CartonProvider()),
         ChangeNotifierProvider(create: (_) => ItemProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: const MyInventoryApp(),
     ),
