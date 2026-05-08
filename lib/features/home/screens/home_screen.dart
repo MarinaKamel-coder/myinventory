@@ -6,6 +6,8 @@ import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
 import 'package:supermoms/features/cartons/screens/carton_detail_screen.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
+import 'package:supermoms/src/models/room.dart';
+import 'package:supermoms/src/providers/auth_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -47,6 +49,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 250,
                 child: Stack(
                   children: [
+                    Positioned(
+                      top: 40,
+                      right: 10,
+                      child: IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        onPressed: () => context.read<AuthProvider>().signOut(),
+                      ),
+                    ),
                     Positioned(
                       top: -30,
                       left: -40,
@@ -180,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                   return _buildCartonItem(
                     box.name,
-                    box.room.label,
+                    box.room,
                     box.items.length,
                     box.fragile,
                     () => Navigator.push(
@@ -215,6 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+
   }
 
   Widget _buildStatCard(String value, String label, Color color, IconData icon) {
@@ -240,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCartonItem(
-      String title, String roomLabel, int itemsCount, bool isFragile, VoidCallback onTap,
+      String title, Room room, int itemsCount, bool isFragile, VoidCallback onTap,
       {String? subtitleAddition}) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -252,13 +263,13 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
               gradient: AppColors.mainGradient,
               borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.inventory_2, color: AppColors.white),
+          child: Text(room.icon, style: const TextStyle(fontSize: 24)),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$roomLabel • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}'),
+            Text('${room.label} • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}'),
             if (subtitleAddition != null)
               Text(subtitleAddition,
                   style: const TextStyle(

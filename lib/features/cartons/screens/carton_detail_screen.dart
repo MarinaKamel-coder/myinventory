@@ -15,6 +15,7 @@ import 'package:supermoms/shared/utils/photo_image_provider.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
+import 'package:supermoms/src/models/room.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
 
@@ -135,60 +136,62 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(context, currentBox),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildWinkAnimation(
-                          child: _buildActionButton(
-                            'Étiquette PDF',
-                            Icons.download,
-                            const Color(0xFF27AE60),
-                                () => _exportEtiquettePdf(context, currentBox),
+      body: Column(
+        children: [
+          _buildHeader(context, currentBox),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildWinkAnimation(
+                            child: _buildActionButton(
+                              'Étiquette PDF',
+                              Icons.download,
+                              const Color(0xFF27AE60),
+                                  () => _exportEtiquettePdf(context, currentBox),
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: _buildWinkAnimation(
-                          delayMs: 150,
-                          child: _buildActionButton(
-                            'Modifier',
-                            Icons.edit_note,
-                            const Color(0xFF7F56D9),
-                                () => _showEditCartonDialog(context, currentBox),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: _buildWinkAnimation(
+                            delayMs: 150,
+                            child: _buildActionButton(
+                              'Modifier',
+                              Icons.edit_note,
+                              const Color(0xFF7F56D9),
+                                  () => _showEditCartonDialog(context, currentBox),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  _buildWinkAnimation(
-                    delayMs: 300,
-                    child: GestureDetector(
-                      onTap: () => _handleDeleteCarton(context, currentBox.id),
-                      child: _buildDeleteButton(),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 25),
-                  _buildQrCodeSection(currentBox),
-                  const SizedBox(height: 25),
-                  _buildInfoSection(currentBox, items.length),
-                  const SizedBox(height: 25),
-                  _buildContentSection(context, currentBox, items),
-                  const SizedBox(height: 100),
-                ],
+                    const SizedBox(height: 15),
+                    _buildWinkAnimation(
+                      delayMs: 300,
+                      child: GestureDetector(
+                        onTap: () => _handleDeleteCarton(context, currentBox.id),
+                        child: _buildDeleteButton(),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+                    _buildQrCodeSection(currentBox),
+                    const SizedBox(height: 25),
+                    _buildInfoSection(currentBox, items.length),
+                    const SizedBox(height: 25),
+                    _buildContentSection(context, currentBox, items),
+                    const SizedBox(height: 100),
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
       floatingActionButton: _buildWinkAnimation(
         delayMs: 500,
@@ -205,43 +208,59 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
   Widget _buildHeader(BuildContext context, Carton box) => GradientHeader(
     height: 220,
     child: SafeArea(
-      child: Column(
+      child: Stack(
         children: [
-          Align(
-            alignment: Alignment.topLeft,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () => Navigator.pop(context),
+          // Bouton retour positionné de manière indépendante avec Material pour le clic
+          Positioned(
+            left: 5,
+            top: 5,
+            child: Material(
+              color: Colors.transparent,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                onPressed: () {
+                  FocusScope.of(context).unfocus(); // Fermer le clavier au cas où
+                  Navigator.of(context).pop();
+                },
+              ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.inventory_2, color: Colors.white, size: 30),
-              const SizedBox(width: 15),
-              Flexible(
-                child: Text(
-                  box.name,
-                  style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 24),
-                  overflow: TextOverflow.ellipsis,
+          // Contenu centré
+          Padding(
+            padding: const EdgeInsets.only(top: 40), // Évite le chevauchement avec le bouton retour
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(box.room.icon, style: const TextStyle(fontSize: 32)),
+                    const SizedBox(width: 15),
+                    Flexible(
+                      child: Text(
+                        box.name,
+                        style: AppTextStyles.headerTitle.copyWith(color: Colors.white, fontSize: 24),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(box.room.label, style: const TextStyle(color: Colors.white70, fontSize: 16)),
-              if (box.fragile) ...[
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(5)),
-                  child: const Text('FRAGILE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(box.room.label, style: const TextStyle(color: Colors.white70, fontSize: 16)),
+                    if (box.fragile) ...[
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(5)),
+                        child: const Text('FRAGILE', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ],
                 ),
               ],
-            ],
+            ),
           ),
         ],
       ),
@@ -479,8 +498,8 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => AlertDialog(
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (stContext, setModalState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
           title: Text(isEditing ? 'Modifier l\'objet' : 'Nouvel objet'),
           content: SingleChildScrollView(
@@ -515,16 +534,22 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
             if (isEditing)
               TextButton(
                 onPressed: () async {
-                  await context.read<ItemProvider>().removeItem(item.id);
-                  await context.read<CartonProvider>().loadCartons();
-                  if (context.mounted) Navigator.pop(context);
+                  final itemProvider = context.read<ItemProvider>();
+                  final cartonProvider = context.read<CartonProvider>();
+                  Navigator.of(dialogContext).pop();
+                  
+                  await itemProvider.removeItem(item.id);
+                  await cartonProvider.loadCartons();
                 },
                 child: const Text('SUPPRIMER', style: TextStyle(color: Colors.red)),
               ),
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('ANNULER')),
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('ANNULER')),
             ElevatedButton(
               onPressed: () async {
                 if (nameController.text.isNotEmpty) {
+                  final itemProvider = context.read<ItemProvider>();
+                  final cartonProvider = context.read<CartonProvider>();
+                  
                   final newItem = CartonItem(
                     id: isEditing ? item.id : DateTime.now().toIso8601String(),
                     cartonId: cartonId,
@@ -532,13 +557,15 @@ class _CartonDetailScreenState extends State<CartonDetailScreen> {
                     description: descController.text,
                     photo: photoPath,
                   );
+
+                  Navigator.of(dialogContext).pop();
+
                   if (isEditing) {
-                    await context.read<ItemProvider>().updateItem(newItem);
+                    await itemProvider.updateItem(newItem);
                   } else {
-                    await context.read<ItemProvider>().addItem(newItem);
+                    await itemProvider.addItem(newItem);
                   }
-                  await context.read<CartonProvider>().loadCartons();
-                  if (context.mounted) Navigator.pop(context);
+                  await cartonProvider.loadCartons();
                 }
               },
               child: Text(isEditing ? 'ENREGISTRER' : 'AJOUTER'),

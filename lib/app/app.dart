@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // ← AJOUT
+import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_theme.dart';
-import 'package:supermoms/features/home/screens/home_screen.dart';
-import 'package:supermoms/src/providers/carton_provider.dart'; // ← AJOUT
-import 'package:supermoms/src/providers/item_provider.dart'; // ← AJOUT
+import 'package:supermoms/src/providers/auth_provider.dart';
+import 'package:supermoms/src/providers/carton_provider.dart';
+import 'package:supermoms/src/providers/item_provider.dart';
+
+import 'package:supermoms/features/authentification/auth_gate.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -12,13 +14,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ItemProvider()), 
         ChangeNotifierProvider(create: (_) => CartonProvider()), 
       ],
       child: MaterialApp(
         title: 'MyInventory',
         theme: AppTheme.lightTheme,
-        home: const HomeScreen(),
+        home: const AuthGate(),
       ),
     );
   }
