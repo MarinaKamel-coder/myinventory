@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supermoms/features/home/screens/home_screen.dart';
 import 'package:supermoms/src/providers/auth_provider.dart';
-import 'login_screen.dart';
+import 'package:supermoms/features/authentification/login_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});

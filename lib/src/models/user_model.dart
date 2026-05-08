@@ -1,10 +1,10 @@
+// lib/models/user_model.dart
 
 class UserModel {
   final int? id;
   final String email;
   final String password;
   final String? displayName;
-  final String? photoUrl;
   final DateTime createdAt;
 
   UserModel({
@@ -13,7 +13,6 @@ class UserModel {
     required this.password,
     required this.createdAt,
     this.displayName,
-    this.photoUrl,
   });
 
   /// Créer un UserModel depuis une Map SQLite
@@ -23,7 +22,6 @@ class UserModel {
       email: map['email'] as String,
       password: map['password'] as String,
       displayName: map['display_name'] as String?,
-      photoUrl: map['photoUrl'] as String?,
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
@@ -35,7 +33,6 @@ class UserModel {
       'email': email,
       'password': password,
       'display_name': displayName,
-      'photoUrl': photoUrl,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -46,7 +43,6 @@ class UserModel {
     String? email,
     String? password,
     String? displayName,
-    String? photoUrl,
     DateTime? createdAt,
   }) {
     return UserModel(
@@ -54,7 +50,6 @@ class UserModel {
       email: email ?? this.email,
       password: password ?? this.password,
       displayName: displayName ?? this.displayName,
-      photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt ?? this.createdAt,
     );
   }

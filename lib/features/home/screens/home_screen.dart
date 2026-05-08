@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use, prefer_expression_function_bodies
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -54,7 +53,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       right: 10,
                       child: IconButton(
                         icon: const Icon(Icons.logout, color: Colors.white),
-                        onPressed: () => context.read<AuthProvider>().signOut(),
+                        onPressed: () async {
+                          await context.read<AuthProvider>().signOut();
+                          if (!mounted) return;
+                          Navigator.of(context)
+                              .pushNamedAndRemoveUntil('/', (route) => false);
+                        },
                       ),
                     ),
                     Positioned(
@@ -170,7 +174,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Derniers cartons', style: theme.textTheme.titleLarge),
-                    TextButton(onPressed: () {}, child: const Text('Voir tout')),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/all_cartons'),
+                      child: const Text('Voir tout'),
+                    ),
                   ],
                 ),
               ),
@@ -180,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text("Aucun carton trouvé"),
                 )
               else
-                ...cartons.map((box) {
+                ...cartons.take(5).map((box) {
                   String? foundItem;
                   if (provider.searchQuery.isNotEmpty) {
                     final match = box.items.where((item) => item.name

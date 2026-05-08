@@ -6,6 +6,7 @@ import 'package:supermoms/app/theme/app_theme.dart';
 import 'package:supermoms/features/authentification/auth_gate.dart';
 import 'package:supermoms/features/authentification/register_screen.dart';
 import 'package:supermoms/features/cartons/screens/carton_form_screen.dart';
+import 'package:supermoms/features/cartons/screens/carton_list_screen.dart';
 import 'package:supermoms/features/home/screens/home_screen.dart';
 import 'package:supermoms/features/items/screens/item_add_global_screen.dart';
 import 'package:supermoms/features/scanner/screens/scan_carton_screen.dart';
@@ -35,7 +36,7 @@ class MyInventoryApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SuperMoms',
+      title: 'MyInventory',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: const AuthGate(),
@@ -45,6 +46,7 @@ class MyInventoryApp extends StatelessWidget {
         '/add_carton': (_) => const CartonFormScreen(),
         '/add_item': (_) => const ItemAddGlobalScreen(),
         '/scanner': (_) => const ScanCartonScreen(),
+        '/all_cartons': (_) => const CartonListScreen(),
       },
     );
   }

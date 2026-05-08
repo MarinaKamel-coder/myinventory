@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../src/providers/auth_provider.dart';
-import '../../app/theme/app_colors.dart';
-import '../../shared/widgets/gradient_header.dart';
+import 'package:supermoms/src/providers/auth_provider.dart';
+import 'package:supermoms/app/theme/app_colors.dart';
+import 'package:supermoms/shared/widgets/gradient_header.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,7 +35,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (success) {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+      // L'AuthGate détectera automatiquement le changement d'état 
+      // et affichera l'écran d'accueil.
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

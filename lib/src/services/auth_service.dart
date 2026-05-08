@@ -1,9 +1,9 @@
 // lib/services/auth_service.dart
 
 import 'package:shared_preferences/shared_preferences.dart';
-import '../Data/database_helper.dart';
-import '../models/user_model.dart';
-import '../utils/hash_utils.dart';
+import 'package:supermoms/src/data/database_helper.dart';
+import 'package:supermoms/src/models/user_model.dart';
+import 'package:supermoms/src/utils/hash_utils.dart';
 
 class AuthService {
   static const _userIdKey = 'logged_user_id';

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../src/providers/auth_provider.dart';
-import '../../app/theme/app_colors.dart';
-import '../../shared/widgets/gradient_header.dart';
+import 'package:supermoms/src/providers/auth_provider.dart';
+import 'package:supermoms/app/theme/app_colors.dart';
+import 'package:supermoms/shared/widgets/gradient_header.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -38,7 +38,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (success) {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/home');
+      // On revient à la racine pour que l'AuthGate affiche l'accueil
+      Navigator.pop(context);
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

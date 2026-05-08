@@ -83,6 +83,5 @@ class DatabaseHelper {
        created_at TEXT NOT NULL
     )
   ''');
-    }
   }
-
+}
