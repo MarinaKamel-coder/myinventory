@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:supermoms/features/cartons/screens/carton_list_screen.dart';
 import 'package:supermoms/features/home/screens/home_screen.dart';
+import 'package:supermoms/features/users/screens/users_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -17,16 +18,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late final List<Widget> _pages = const [
     HomeScreen(),
     CartonListScreen(),
-    _ProfilePlaceholderScreen(),
+    UsersScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -51,22 +49,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             label: 'Profil',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ProfilePlaceholderScreen extends StatelessWidget {
-  const _ProfilePlaceholderScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Page profil (bientot)',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
       ),
     );
   }
