@@ -104,7 +104,7 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
       );
 
   Widget _buildRoomDropdown() => DropdownButtonFormField<Room>(
-        initialValue: _selectedRoom,
+        value: _selectedRoom,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
@@ -112,7 +112,18 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
           enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.purple.shade100)),
           focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.headerMid)),
         ),
-        items: Room.values.map((room) => DropdownMenuItem(value: room, child: Text(room.label))).toList(),
+        items: Room.values
+            .map((room) => DropdownMenuItem(
+                  value: room,
+                  child: Row(
+                    children: [
+                      Text(room.icon),
+                      const SizedBox(width: 10),
+                      Text(room.label),
+                    ],
+                  ),
+                ))
+            .toList(),
         onChanged: (val) => setState(() => _selectedRoom = val!),
       );
 
@@ -206,7 +217,9 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
       );
 
   Widget _buildCreateCartonButton(BuildContext context) => GestureDetector(
-        onTap: () {
+
+
+    onTap: ()async  {
           if (_cartonNameController.text.isNotEmpty) {
             final cartonId = DateTime.now().toString();
             final newCarton = Carton(
@@ -217,7 +230,7 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
               items: List<CartonItem>.from(_addedItems.map((item) => item.copyWith(cartonId: cartonId))),
               createdAt: DateTime.now(),
             );
-            context.read<CartonProvider>().addCarton(newCarton);
+            await context.read<CartonProvider>().addCarton(newCarton);
             Navigator.pop(context);
           }
         },

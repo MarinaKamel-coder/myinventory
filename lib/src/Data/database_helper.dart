@@ -19,7 +19,30 @@ class DatabaseHelper {
     Directory dir = await getApplicationDocumentsDirectory();
     String path = join(dir.path, "supermoms.db");
 
-    return await openDatabase(path, version: 1, onCreate: _createTables);
+    return await openDatabase(
+      path,
+      version: 2,
+      onCreate: _createTables,
+      onUpgrade: _onUpgrade,
+      //  Active les clés étrangères pour le ON DELETE CASCADE
+      onConfigure: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+    );
+  }
+
+  Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+       CREATE TABLE IF NOT EXISTS users (
+         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         email TEXT UNIQUE NOT NULL,
+         password TEXT NOT NULL,
+         display_name TEXT,
+         created_at TEXT NOT NULL
+      )
+    ''');
+    }
   }
 
   Future _createTables(Database db, int version) async {
@@ -50,5 +73,15 @@ class DatabaseHelper {
         FOREIGN KEY (cartonId) REFERENCES cartons(id) ON DELETE CASCADE
       );
     ''');
+
+    await db.execute('''
+     CREATE TABLE IF NOT EXISTS users (
+       id INTEGER PRIMARY KEY AUTOINCREMENT,
+       email TEXT UNIQUE NOT NULL,
+       password TEXT NOT NULL,
+       display_name TEXT,
+       created_at TEXT NOT NULL
+    )
+  ''');
   }
 }

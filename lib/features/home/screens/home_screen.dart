@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use, prefer_expression_function_bodies
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +5,8 @@ import 'package:supermoms/app/theme/app_colors.dart';
 import 'package:supermoms/app/theme/app_text_styles.dart';
 import 'package:supermoms/features/cartons/screens/carton_detail_screen.dart';
 import 'package:supermoms/shared/widgets/gradient_header.dart';
+import 'package:supermoms/src/models/room.dart';
+import 'package:supermoms/src/providers/auth_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -47,6 +48,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 250,
                 child: Stack(
                   children: [
+                    Positioned(
+                      top: 40,
+                      right: 10,
+                      child: IconButton(
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        onPressed: () async {
+                          await context.read<AuthProvider>().signOut();
+                          if (!mounted) return;
+                          Navigator.of(context)
+                              .pushNamedAndRemoveUntil('/', (route) => false);
+                        },
+                      ),
+                    ),
                     Positioned(
                       top: -30,
                       left: -40,
@@ -160,7 +174,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Derniers cartons', style: theme.textTheme.titleLarge),
-                    TextButton(onPressed: () {}, child: const Text('Voir tout')),
+                    TextButton(
+                      onPressed: () => Navigator.pushNamed(context, '/all_cartons'),
+                      child: const Text('Voir tout'),
+                    ),
                   ],
                 ),
               ),
@@ -170,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text("Aucun carton trouvé"),
                 )
               else
-                ...cartons.map((box) {
+                ...cartons.take(5).map((box) {
                   String? foundItem;
                   if (provider.searchQuery.isNotEmpty) {
                     final match = box.items.where((item) => item.name
@@ -180,7 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   }
                   return _buildCartonItem(
                     box.name,
-                    box.room.label,
+                    box.room,
                     box.items.length,
                     box.fragile,
                     () => Navigator.push(
@@ -215,6 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+
   }
 
   Widget _buildStatCard(String value, String label, Color color, IconData icon) {
@@ -240,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCartonItem(
-      String title, String roomLabel, int itemsCount, bool isFragile, VoidCallback onTap,
+      String title, Room room, int itemsCount, bool isFragile, VoidCallback onTap,
       {String? subtitleAddition}) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -252,13 +270,13 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
               gradient: AppColors.mainGradient,
               borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.inventory_2, color: AppColors.white),
+          child: Text(room.icon, style: const TextStyle(fontSize: 24)),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('$roomLabel • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}'),
+            Text('${room.label} • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}'),
             if (subtitleAddition != null)
               Text(subtitleAddition,
                   style: const TextStyle(
