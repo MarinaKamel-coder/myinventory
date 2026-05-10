@@ -5,6 +5,9 @@ import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/models/room.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supermoms/shared/utils/local_photo_storage.dart';
+import 'package:supermoms/shared/utils/photo_image_provider.dart';
 
 class CartonFormScreen extends StatefulWidget {
   const CartonFormScreen({super.key});
@@ -17,6 +20,8 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isFragile = false;
   bool _showItemForm = false;
+  final ImagePicker _picker = ImagePicker();
+  String? _photoPath;
 
   final _cartonNameController = TextEditingController();
   final _itemNameController = TextEditingController();
@@ -180,11 +185,48 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
         _buildAddThisItemButton(),
       ]);
 
-  Widget _buildPhotoPicker() => Container(
-        height: 80,
-        decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
-        child: const Center(child: Icon(Icons.camera_alt_outlined, color: Colors.grey)),
+  Widget _buildPhotoPicker() {
+  final provider = buildPhotoImageProvider(_photoPath);
+
+  return GestureDetector(
+    onTap: () async {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
       );
+
+      if (picked == null) return;
+
+      final storedPath = await persistPickedPhoto(picked);
+
+      if (storedPath != null) {
+        setState(() => _photoPath = storedPath);
+      }
+    },
+    child: Container(
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: provider == null
+          ? const Center(
+              child: Icon(
+                Icons.camera_alt_outlined,
+                color: Colors.grey,
+              ),
+            )
+          : ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image(
+                image: provider,
+                fit: BoxFit.cover,
+              ),
+            ),
+    ),
+  );
+}
 
   Widget _buildAddThisItemButton() => ElevatedButton(
         style: ElevatedButton.styleFrom(
@@ -195,8 +237,16 @@ class _CartonFormScreenState extends State<CartonFormScreen> {
         onPressed: () {
           if (_itemNameController.text.isNotEmpty) {
             setState(() {
-              _addedItems.add(CartonItem(id: DateTime.now().toString(), cartonId: '', name: _itemNameController.text, description: _itemDescController.text));
-              _itemNameController.clear(); _itemDescController.clear(); _showItemForm = false;
+              _addedItems.add(
+  CartonItem(
+    id: DateTime.now().toString(),
+    cartonId: '',
+    name: _itemNameController.text,
+    description: _itemDescController.text,
+    photo: _photoPath,
+  ),
+);
+              _itemNameController.clear(); _itemDescController.clear(); _showItemForm = false; _photoPath = null;
             });
           }
         },

@@ -42,8 +42,11 @@ class DatabaseHelper {
          created_at TEXT NOT NULL
       )
     ''');
-    }
+    await db.execute(
+      'ALTER TABLE carton_items ADD COLUMN photo TEXT'
+    );
   }
+}
 
   Future _createTables(Database db, int version) async {
     await db.execute('''
