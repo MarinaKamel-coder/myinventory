@@ -14,6 +14,7 @@ import 'package:supermoms/src/providers/auth_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 import 'package:supermoms/src/providers/item_provider.dart';
 import 'package:supermoms/src/providers/user_provider.dart';
+import 'package:supermoms/features/presentation/screens/presentation_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +42,7 @@ class MyInventoryApp extends StatelessWidget {
       title: 'MyInventory',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const AuthGate(),
+      home: const PresentationScreen(),
       routes: {
         '/home': (_) => const MainNavigationScreen(),
         '/register': (_) => const RegisterScreen(),
