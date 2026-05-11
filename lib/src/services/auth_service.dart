@@ -1,12 +1,21 @@
 // lib/services/auth_service.dart
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:supermoms/src/data/database_helper.dart';
 import 'package:supermoms/src/models/user_model.dart';
 import 'package:supermoms/src/utils/hash_utils.dart';
 
 class AuthService {
   static const _userIdKey = 'logged_user_id';
+
+  // Vérifie s'il existe déjà un compte sur cet appareil
+  Future<bool> hasExistingUser() async {
+    final db = await DatabaseHelper.instance.database;
+    final result = await db.rawQuery('SELECT COUNT(*) as count FROM users');
+    final count = Sqflite.firstIntValue(result) ?? 0;
+    return count > 0;
+  }
 
   // INSCRIPTION
   Future<UserModel?> register(String email, String password, String name) async {

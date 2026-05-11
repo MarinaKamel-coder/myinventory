@@ -175,12 +175,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    TextButton(
-                      onPressed: () => Navigator.pushNamed(context, '/register'),
-                      child: Text(
-                        "Pas encore de compte ? S'inscrire",
-                        style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.w600),
-                      ),
+                    FutureBuilder<bool>(
+                      future: authProvider.checkIfAccountExists(),
+                      builder: (context, snapshot) {
+                        final accountExists = snapshot.data ?? false;
+                        if (accountExists) return const SizedBox.shrink();
+
+                        return TextButton(
+                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          child: Text(
+                            "Pas encore de compte ? S'inscrire",
+                            style: TextStyle(color: theme.primaryColor, fontWeight: FontWeight.w600),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
