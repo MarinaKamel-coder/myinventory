@@ -67,6 +67,17 @@ class AuthService {
     await prefs.remove(_userIdKey);
   }
 
+  // SUPPRESSION DE COMPTE
+  Future<void> deleteAccount(int userId) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.delete(
+      'users',
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+    await signOut();
+  }
+
   // Vérifie si une session existe au démarrage
   Future<UserModel?> getCurrentUser() async {
     final prefs = await SharedPreferences.getInstance();

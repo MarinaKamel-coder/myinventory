@@ -12,4 +12,23 @@ class UserDao {
     final db = await DatabaseHelper.instance.database;
     await db.insert('users', user.toMap());
   }
+
+  Future<void> updateUser(UserModel user) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.update(
+      'users',
+      user.toMap(),
+      where: 'id = ?',
+      whereArgs: [user.id],
+    );
+  }
+
+  Future<void> deleteUser(int id) async {
+    final db = await DatabaseHelper.instance.database;
+    await db.delete(
+      'users',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 }
