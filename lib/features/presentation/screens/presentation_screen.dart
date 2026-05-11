@@ -7,220 +7,113 @@ class PresentationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
+      body: Container(
+        width: double.infinity,
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-
-              const SizedBox(height: 40),
-
-              // LOGO
-              Image.asset(
-                'assets/images/logo.png',
-                height: 120,
-              ),
-
-              const SizedBox(height: 25),
-
-              // TITRE
-              const Text(
-                'MyInventory',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2D3142),
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // DESCRIPTION
-              const Text(
-                'L’assistant intelligent pour un déménagement sans stress',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                  height: 1.5,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // FONCTIONNALITÉS
-
-              _buildFeature(
-                Icons.inventory_2_outlined,
-                'Gestion des cartons',
-                'Organisez facilement vos cartons.',
-              ),
-
-              const SizedBox(height: 15),
-
-              _buildFeature(
-                Icons.photo_camera_outlined,
-                'Ajout de photos',
-                'Ajoutez des photos aux objets.',
-              ),
-
-              const SizedBox(height: 15),
-
-              _buildFeature(
-                Icons.qr_code,
-                'QR Codes',
-                'Scannez rapidement vos cartons.',
-              ),
-
-              const SizedBox(height: 50),
-
-              // BOUTON CONNEXION
-
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7F56D9),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-
-                  onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const AuthGate(),
-    ),
-  );
-},
-
-                  child: const Text(
-                    'Se connecter',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // BOUTON CREATE ACCOUNT
-
-              SizedBox(
-                width: double.infinity,
-                height: 55,
-
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: Color(0xFF7F56D9),
-                    ),
-
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-
-                  onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => const AuthGate(),
-    ),
-  );
-},
-
-                  child: const Text(
-                    'Créer un compte',
-                    style: TextStyle(
-                      color: Color(0xFF7F56D9),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF7F56D9),
+              Color(0xFF4A90E2),
+              Color(0xFFF8F9FE),
             ],
           ),
         ),
-      ),
-    );
-  }
 
-  static Widget _buildFeature(
-    IconData icon,
-    String title,
-    String description,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(18),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(30),
 
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
-        ],
-      ),
-
-      child: Row(
-        children: [
-
-          Container(
-            padding: const EdgeInsets.all(12),
-
-            decoration: BoxDecoration(
-              color: const Color(0xFFEDE7FF),
-              borderRadius: BorderRadius.circular(12),
-            ),
-
-            child: Icon(
-              icon,
-              color: const Color(0xFF7F56D9),
-            ),
-          ),
-
-          const SizedBox(width: 15),
-
-          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
 
-                Text(
-                  title,
+                // LOGO
+                Container(
+                  padding: const EdgeInsets.all(25),
 
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    height: 120,
                   ),
                 ),
 
-                const SizedBox(height: 5),
+                const SizedBox(height: 40),
 
-                Text(
-                  description,
-                  style: const TextStyle(
-                    color: Colors.grey,
+                // TITRE
+                const Text(
+                  'MyInventory',
+                  textAlign: TextAlign.center,
+
+                  style: TextStyle(
+                    fontSize: 38,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // SLOGAN
+                const Text(
+                  'L’assistant intelligent pour un déménagement sans stress',
+                  textAlign: TextAlign.center,
+
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white70,
+                    height: 1.5,
+                  ),
+                ),
+
+                const SizedBox(height: 80),
+
+                // BOUTON DÉCOUVRIR
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 60,
+
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AuthGate(),
+                        ),
+                      );
+                    },
+
+                    child: const Text(
+                      'Découvrir',
+                      style: TextStyle(
+                        color: Color(0xFF7F56D9),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
