@@ -13,6 +13,10 @@ class AuthProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isAuthenticated => _currentUser != null;
 
+  Future<bool> checkIfAccountExists() async {
+    return await _authService.hasExistingUser();
+  }
+
   AuthProvider() {
     _checkCurrentUser();
   }
