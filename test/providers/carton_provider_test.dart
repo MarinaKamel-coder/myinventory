@@ -1,17 +1,38 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/models/room.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
+import 'package:supermoms/src/Data/database_helper.dart';
 
 void main() {
-  // Nécessaire car le Provider utilise des composants asynchrones liés aux plugins
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+
+    const MethodChannel('plugins.flutter.io/path_provider')
+        .setMockMethodCallHandler((MethodCall methodCall) async {
+      if (methodCall.method == 'getApplicationDocumentsDirectory') {
+        return '.';
+      }
+      return null;
+    });
+  });
 
   group('CartonProvider - Tests asynchrones SQLite', () {
     late CartonProvider provider;
 
-    setUp(() {
+    setUp(() async {
+      // NETTOYAGE DE LA DB AVANT CHAQUE TEST
+      final db = await DatabaseHelper.instance.database;
+      await db.delete('carton_items');
+      await db.delete('cartons');
+      
       provider = CartonProvider();
+      await provider.loadCartons(); // S'assurer que la liste est vide et prête
     });
 
     test('addCarton : Doit ajouter un carton et augmenter le total', () async {
