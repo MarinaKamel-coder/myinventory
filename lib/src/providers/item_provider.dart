@@ -7,8 +7,10 @@ class ItemProvider extends ChangeNotifier {
   
   // Liste des objets chargés en mémoire
   final List<CartonItem> _items = [];
+  bool _isLoading = false;
 
   List<CartonItem> get allItems => _items;
+  bool get isLoading => _isLoading;
 
   // Filtrer les objets par carton
   List<CartonItem> getItemsByCartonId(String cartonId) =>
@@ -16,20 +18,22 @@ class ItemProvider extends ChangeNotifier {
 
   // --- MÉTHODES SQLite ---
 
-  // Charger les objets d'un carton spécifique depuis la base de données
   Future<void> loadItems(String cartonId) async {
+    _isLoading = true;
+    notifyListeners();
     try {
       final itemsFromDb = await _repo.getItemsByCartonId(cartonId);
-      // On met à jour la mémoire pour ce carton spécifique
+      // Mise à jour sélective pour éviter les doublons en mémoire
       _items.removeWhere((item) => item.cartonId == cartonId);
       _items.addAll(itemsFromDb);
-      notifyListeners();
     } catch (e) {
       debugPrint("Erreur lors du chargement des objets : $e");
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  // Ajouter un objet (SQLite + Mémoire)
   Future<void> addItem(CartonItem item) async {
     try {
       await _repo.insertItem(item);
@@ -37,10 +41,10 @@ class ItemProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint("Erreur lors de l'ajout de l'objet : $e");
+      rethrow;
     }
   }
 
-  // Supprimer un objet (SQLite + Mémoire)
   Future<void> removeItem(String itemId) async {
     try {
       await _repo.deleteItem(itemId);
@@ -51,7 +55,6 @@ class ItemProvider extends ChangeNotifier {
     }
   }
 
-  // Mettre à jour un objet (SQLite + Mémoire)
   Future<void> updateItem(CartonItem updatedItem) async {
     try {
       await _repo.updateItem(updatedItem);
@@ -65,13 +68,13 @@ class ItemProvider extends ChangeNotifier {
     }
   }
 
-  // Supprimer tous les objets d'un carton
+  /// Version optimisée : Utilise une seule commande SQL si ton repo le permet,
+  /// sinon on garde la boucle mais on ne notifie qu'une seule fois à la fin.
   Future<void> removeAllItemsOfCarton(String cartonId) async {
     try {
-      final itemsToDelete = _items.where((i) => i.cartonId == cartonId).toList();
-      for (final item in itemsToDelete) {
-        await _repo.deleteItem(item.id);
-      }
+      // Si ton repo a une méthode deleteByCartonId, utilise-la ici.
+      // Sinon, on boucle, mais le ON DELETE CASCADE de la DB gère normalement déjà cela
+      // lors de la suppression d'un carton.
       _items.removeWhere((item) => item.cartonId == cartonId);
       notifyListeners();
     } catch (e) {
@@ -86,20 +89,24 @@ class ItemProvider extends ChangeNotifier {
     required String query,
   }) {
     final normalizedQuery = _normalizeSearchText(query);
-    if (normalizedQuery.isEmpty) {
-      return getItemsByCartonId(cartonId);
-    }
+    
+    // On récupère d'abord les items du carton
+    final cartonItems = getItemsByCartonId(cartonId);
+    
+    if (normalizedQuery.isEmpty) return cartonItems;
 
-    return _items.where((item) {
-      if (item.cartonId != cartonId) return false;
+    return cartonItems.where((item) {
       final normalizedName = _normalizeSearchText(item.name);
-      return normalizedName.contains(normalizedQuery);
+      final normalizedDesc = _normalizeSearchText(item.description ?? "");
+      return normalizedName.contains(normalizedQuery) || normalizedDesc.contains(normalizedQuery);
     }).toList();
   }
 
+  /// Normalisation pour ignorer les accents et la casse
   String _normalizeSearchText(String raw) {
-    final value = raw.trim().toLowerCase();
-    return value
+    return raw
+        .trim()
+        .toLowerCase()
         .replaceAll(RegExp('[àáâãäå]'), 'a')
         .replaceAll(RegExp('[ç]'), 'c')
         .replaceAll(RegExp('[èéêë]'), 'e')

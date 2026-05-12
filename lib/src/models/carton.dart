@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart'; 
 import 'package:supermoms/src/models/carton_item.dart';
 import 'package:supermoms/src/models/room.dart';
 
@@ -37,45 +38,54 @@ class Carton {
 
   @override
   String toString() =>
-      'Carton(id: $id, name: $name, room: $room, fragile: $fragile, items: $items, createdAt: $createdAt)';
+      'Carton(id: $id, name: $name, room: $room, fragile: $fragile, items: ${items.length} items, createdAt: $createdAt)';
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is Carton &&
+          runtimeType == other.runtimeType &&
           other.id == id &&
           other.name == name &&
           other.room == room &&
           other.fragile == fragile &&
-          other.items == items &&
+          listEquals(other.items, items) && // Correction : Utilisation de listEquals
           other.createdAt == createdAt;
 
   @override
-  int get hashCode => Object.hash(id, name, room, fragile, items, createdAt);
+  int get hashCode => 
+      id.hashCode ^ 
+      name.hashCode ^ 
+      room.hashCode ^ 
+      fragile.hashCode ^ 
+      Object.hashAll(items) ^ // Correction : hashAll pour les listes
+      createdAt.hashCode;
 }
 
-
+/// Extension pour le mapping SQLite
 extension CartonSqlMapping on Carton {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'name': name,
-      'room': room.label,
+      'room': room.name, // Utilisation de .name (plus stable que .label pour la DB)
       'fragile': fragile ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
     };
   }
 
-static Carton fromMap(Map<String, dynamic> map, List<CartonItem> items) {
+  static Carton fromMap(Map<String, dynamic> map, List<CartonItem> items) {
     return Carton(
       id: map['id'] as String,
       name: map['name'] as String,
+      // Recherche sécurisée avec fallback sur .salon si la pièce n'est pas trouvée
       room: Room.values.firstWhere(
-        (r) => r.label == (map['room'] as String),
+        (r) => r.name == (map['room'] as String) || r.label == (map['room'] as String),
+        orElse: () => Room.salon,
       ),
-      fragile: (map['fragile'] as int) == 1,
+      fragile: (map['fragile'] as int? ?? 0) == 1,
       items: items,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      createdAt: DateTime.parse(map['created_at'] as String? ?? DateTime.now().toIso8601String()),
     );
   }
 }
