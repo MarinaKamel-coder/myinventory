@@ -7,47 +7,56 @@ class CartonProvider extends ChangeNotifier {
   
   List<Carton> _cartons = [];
   String _searchQuery = '';
+  bool _isLoading = false;
 
+  // Getters
+  List<Carton> get allCartonsRaw => _cartons;
   String get searchQuery => _searchQuery;
+  bool get isLoading => _isLoading;
 
-  // Getter avec logique de recherche
+  /// Getter avec logique de recherche (filtre le nom du carton OU les objets)
   List<Carton> get cartons {
     if (_searchQuery.isEmpty) return _cartons;
 
     final query = _searchQuery.toLowerCase();
 
     return _cartons.where((carton) {
-      bool nameMatches = carton.name.toLowerCase().contains(query);
-      bool itemMatches = carton.items.any((item) => 
+      final nameMatches = carton.name.toLowerCase().contains(query);
+      final itemMatches = carton.items.any((item) => 
           item.name.toLowerCase().contains(query));
+      
       return nameMatches || itemMatches;
     }).toList();
   }
 
   // --- MÉTHODES SQLite ---
 
-  // Charger les données depuis la base
+  /// Charge les données depuis la base de données au démarrage
   Future<void> loadCartons() async {
+    _setLoading(true);
     try {
       _cartons = await _repository.getAllCartons();
-      notifyListeners();
     } catch (e) {
       debugPrint("Erreur CartonProvider.loadCartons: $e");
+    } finally {
+      _setLoading(false);
     }
   }
 
-  // Ajouter un carton en base et en mémoire
+  /// Ajoute un carton en base et met à jour la mémoire
   Future<void> addCarton(Carton newCarton) async {
     try {
       await _repository.insertCarton(newCarton);
+      // On l'ajoute au début de la liste pour qu'il apparaisse en premier
       _cartons.insert(0, newCarton);
       notifyListeners();
     } catch (e) {
       debugPrint("Erreur CartonProvider.addCarton: $e");
+      rethrow; // Permet à l'UI d'afficher une erreur si besoin
     }
   }
 
-  // Supprimer un carton
+  /// Supprime un carton
   Future<void> deleteCarton(String cartonId) async {
     try {
       await _repository.deleteCarton(cartonId);
@@ -58,7 +67,7 @@ class CartonProvider extends ChangeNotifier {
     }
   }
 
-  // Mettre à jour un carton
+  /// Met à jour un carton (ex: après ajout d'un objet ou changement de pièce)
   Future<void> updateCarton(Carton updatedCarton) async {
     try {
       await _repository.updateCarton(updatedCarton);
@@ -79,9 +88,21 @@ class CartonProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Stats
+  void clearSearch() {
+    _searchQuery = '';
+    notifyListeners();
+  }
+
+  // --- STATISTIQUES & UTILITAIRES ---
+
   int get totalCartons => _cartons.length;
+  
   int get fragileCount => _cartons.where((c) => c.fragile).length;
+
+  /// Calcule le nombre total d'objets tous cartons confondus
+  int get totalItemsCount {
+    return _cartons.fold(0, (sum, carton) => sum + carton.items.length);
+  }
 
   Carton? findById(String id) {
     try {
@@ -89,5 +110,11 @@ class CartonProvider extends ChangeNotifier {
     } catch (_) {
       return null;
     }
+  }
+
+  // Helper privé pour l'état de chargement
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
   }
 }

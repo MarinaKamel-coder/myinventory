@@ -15,9 +15,19 @@ class BoxCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Card(
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
@@ -25,31 +35,50 @@ class BoxCard extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              const Icon(
-                Icons.inventory_2_outlined,
-                color: AppColors.headerMid,
-                size: 32,
+              // Icône stylisée dans un cercle léger
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.headerMid.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.inventory_2_outlined,
+                  color: AppColors.headerMid,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 16),
+              // Textes
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: theme.textTheme.titleLarge,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2D3142),
+                      ),
                     ),
-                    const SizedBox(height: 4.0),
+                    const SizedBox(height: 4),
                     Text(
-                      "Nombre d'objets : $itemCount",
-                      style: theme.textTheme.bodyMedium,
+                      itemCount > 1 
+                        ? "$itemCount objets" 
+                        : "$itemCount objet",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
               ),
+              // Indicateur de flèche
               const Icon(
-                Icons.chevron_right,
-                color: AppColors.textSecondary,
+                Icons.chevron_right_rounded,
+                color: Colors.grey,
               ),
             ],
           ),

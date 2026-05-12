@@ -19,22 +19,32 @@ class ItemAddGlobalScreen extends StatefulWidget {
 
 class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+  bool _isLoading = false;
+
   // Champs de l'objet
   final _itemNameController = TextEditingController();
   final _itemDescController = TextEditingController();
+  final _itemQtyController = TextEditingController(text: '1'); 
 
   // Gestion du carton de destination
   Carton? _selectedCarton;
   bool _createNewCarton = false;
 
-  // Champs pour le nouveau carton (si nécessaire)
+  // Champs pour le nouveau carton
   final _newCartonNameController = TextEditingController();
   Room _selectedRoom = Room.salon;
-  final bool _isFragile = false;
+  
   final ImagePicker _picker = ImagePicker();
-
   String? _photoPath;
+
+  @override
+  void dispose() {
+    _itemNameController.dispose();
+    _itemDescController.dispose();
+    _itemQtyController.dispose();
+    _newCartonNameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,74 +53,102 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
       appBar: AppBar(
-        title: const Text('Ajouter un objet', style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
+        title: const Text('Ajouter un objet', 
+          style: TextStyle(color: AppColors.textMain, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textMain),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- SECTION 1 : L'OBJET ---
-              _buildSectionTitle("L'objet"),
-              _buildCard([
-                _buildTextField(_itemNameController, "Nom de l'objet *", 'Ex: Cafetière'),
-                const SizedBox(height: 15),
-                _buildTextField(_itemDescController, 'Description', 'Ex: Rouge, Nespresso'),
-                const SizedBox(height: 20),
-                _buildPhotoSelector(),
-              ]),
-
-              const SizedBox(height: 25),
-
-              // --- SECTION 2 : DESTINATION ---
-              _buildSectionTitle('Destination'),
-              _buildCard([
-                const Text('Où voulez-vous ranger cet objet ?', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                const SizedBox(height: 15),
-                
-                // Switch : Existant vs Nouveau
-                Row(
-                  children: [
-                    ChoiceChip(
-                      label: const Text('Carton existant'),
-                      selected: !_createNewCarton,
-                      onSelected: (val) => setState(() => _createNewCarton = !val),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle("L'objet"),
+                  _buildCard([
+                    _buildTextField(
+                      _itemNameController, 
+                      "Nom de l'objet *", 
+                      'Ex: Assiettes en porcelaine',
+                      validator: (val) => val == null || val.isEmpty ? "Le nom est requis" : null,
                     ),
-                    const SizedBox(width: 10),
-                    ChoiceChip(
-                      label: const Text('Nouveau carton'),
-                      selected: _createNewCarton,
-                      onSelected: (val) => setState(() => _createNewCarton = val),
+                    const SizedBox(height: 15),
+                    _buildTextField(_itemDescController, 'Description (optionnel)', 'Ex: Fragile, carton bleu'),
+                    const SizedBox(height: 15),
+                    
+                    // --- CHAMP QUANTITÉ (Visible ici) ---
+                    _buildTextField(
+                      _itemQtyController, 
+                      'Quantité', 
+                      '1',
+                      keyboardType: TextInputType.number,
                     ),
-                  ],
-                ),
-                
-                const SizedBox(height: 20),
+                    
+                    const SizedBox(height: 20),
+                    _buildPhotoSelector(),
+                  ]),
 
-                if (!_createNewCarton)
-                  _buildCartonDropdown(cartons)
-                else
-                  _buildNewCartonFields(),
-              ]),
+                  const SizedBox(height: 25),
 
-              const SizedBox(height: 40),
+                  _buildSectionTitle('Destination'),
+                  _buildCard([
+                    const Text('Où voulez-vous ranger cet objet ?', 
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    const SizedBox(height: 15),
+                    
+                    Row(
+                      children: [
+                        ChoiceChip(
+                          label: const Text('Carton existant'),
+                          selected: !_createNewCarton,
+                          selectedColor: AppColors.headerMid.withOpacity(0.2),
+                          onSelected: (val) => setState(() => _createNewCarton = !val),
+                        ),
+                        const SizedBox(width: 10),
+                        ChoiceChip(
+                          label: const Text('Nouveau carton'),
+                          selected: _createNewCarton,
+                          selectedColor: AppColors.headerMid.withOpacity(0.2),
+                          onSelected: (val) => setState(() => _createNewCarton = val),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 20),
 
-              // --- BOUTON DE SAUVEGARDE ---
-              _buildSubmitButton(context),
-            ],
+                    AnimatedCrossFade(
+                      firstChild: _buildCartonDropdown(cartons),
+                      secondChild: _buildNewCartonFields(),
+                      crossFadeState: _createNewCarton ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                      duration: const Duration(milliseconds: 300),
+                    ),
+                  ]),
+
+                  const SizedBox(height: 40),
+                  _buildSubmitButton(context),
+                ],
+              ),
+            ),
           ),
-        ),
+          if (_isLoading)
+             Container(
+              color: Colors.black26,
+              child: const Center(child: CircularProgressIndicator()),
+            ),
+        ],
       ),
     );
   }
+
+  // --- WIDGETS UI ---
 
   Widget _buildSectionTitle(String title) => Padding(
     padding: const EdgeInsets.only(left: 5, bottom: 10),
@@ -122,32 +160,44 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
-      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
     ),
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
   );
 
-  Widget _buildTextField(TextEditingController controller, String label, String hint) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textMain)),
-      const SizedBox(height: 8),
-      TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: hint,
-          filled: true,
-          fillColor: Colors.grey.shade50,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  // CORRECTION : Ajout explicite du paramètre keyboardType pour l'affichage
+  Widget _buildTextField(
+    TextEditingController controller, 
+    String label, 
+    String hint, 
+    {String? Function(String?)? validator, 
+    TextInputType keyboardType = TextInputType.text}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textMain)),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          keyboardType: keyboardType, // Indispensable pour la quantité
+          decoration: InputDecoration(
+            hintText: hint,
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
+  }
 
   Widget _buildCartonDropdown(List<Carton> cartons) => DropdownButtonFormField<Carton>(
-    initialValue: _selectedCarton,
+    value: _selectedCarton,
     hint: const Text('Choisir un carton'),
+    isExpanded: true,
+    validator: (val) => !_createNewCarton && val == null ? "Sélectionnez un carton" : null,
     decoration: InputDecoration(
       filled: true,
       fillColor: Colors.grey.shade50,
@@ -159,50 +209,38 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
 
   Widget _buildNewCartonFields() => Column(
     children: [
-      _buildTextField(_newCartonNameController, 'Nom du nouveau carton *', 'Ex: Cuisine - Petit électro'),
+      _buildTextField(
+        _newCartonNameController, 
+        'Nom du nouveau carton *', 
+        'Ex: Cuisine - Vaisselle',
+        validator: (val) => _createNewCarton && (val == null || val.isEmpty) ? "Le nom du carton est requis" : null,
+      ),
       const SizedBox(height: 15),
       DropdownButtonFormField<Room>(
-        initialValue: _selectedRoom,
+        value: _selectedRoom,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.grey.shade50,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         ),
-        items: Room.values.map((r) => DropdownMenuItem(value: r, child: Text(r.label))).toList(),
+        items: Room.values.map((r) => DropdownMenuItem(value: r, child: Text("${r.icon} ${r.label}"))).toList(),
         onChanged: (val) => setState(() => _selectedRoom = val!),
       ),
     ],
   );
 
-  Widget _buildSubmitButton(BuildContext context) => GestureDetector(
-    onTap: () => _handleSubmit(),
-    child: Container(
-      width: double.infinity,
-      height: 60,
-      decoration: BoxDecoration(
-        gradient: AppColors.mainGradient,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [BoxShadow(color: AppColors.headerMid.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
-      ),
-      child: const Center(
-        child: Text("Enregistrer l'objet", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-      ),
-    ),
-  );
-
   Widget _buildPhotoSelector() {
     final imageProvider = buildPhotoImageProvider(_photoPath);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Photo de l'objet (optionnel)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textMain)),
+        const Text("Photo (optionnel)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textMain)),
         const SizedBox(height: 10),
         GestureDetector(
           onTap: _pickPhoto,
           child: Container(
             width: double.infinity,
-            height: 100,
+            height: 120,
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(15),
@@ -212,19 +250,14 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.camera_alt_outlined, color: Colors.grey.shade400, size: 30),
+                      Icon(Icons.camera_alt_outlined, color: Colors.grey.shade400, size: 35),
                       const SizedBox(height: 5),
                       Text('Ajouter une photo', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
                     ],
                   )
                 : ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image(
-                      image: imageProvider,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
+                    child: Image(image: imageProvider, fit: BoxFit.cover),
                   ),
           ),
         ),
@@ -232,64 +265,82 @@ class _ItemAddGlobalScreenState extends State<ItemAddGlobalScreen> {
     );
   }
 
+  Widget _buildSubmitButton(BuildContext context) => GestureDetector(
+    onTap: _isLoading ? null : () => _handleSubmit(),
+    child: Container(
+      width: double.infinity,
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: AppColors.mainGradient,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [BoxShadow(color: AppColors.headerMid.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
+      ),
+      child: Center(
+        child: Text(_isLoading ? "Enregistrement..." : "Confirmer l'objet", 
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+      ),
+    ),
+  );
+
+  // --- LOGIQUE METIER ---
+
   Future<void> _pickPhoto() async {
     final picked = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (picked == null) return;
-
     final storedPath = await persistPickedPhoto(picked);
-    if (!mounted) return;
-
-    if (storedPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible de sauvegarder la photo localement.')),
-      );
-      return;
-    }
-
+    if (!mounted || storedPath == null) return;
     setState(() => _photoPath = storedPath);
   }
 
   Future<void> _handleSubmit() async {
-    if (_itemNameController.text.isEmpty) return;
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
 
-    final cartonProvider = context.read<CartonProvider>();
-    final itemProvider = context.read<ItemProvider>();
-    late String targetCartonId;
+    try {
+      final cartonProvider = context.read<CartonProvider>();
+      final itemProvider = context.read<ItemProvider>();
+      late String targetCartonId;
 
-    if (_createNewCarton) {
-      if (_newCartonNameController.text.isEmpty) return;
-      // 1. Créer le nouveau carton
-      final newCarton = Carton(
-        id: DateTime.now().toString(),
-        name: _newCartonNameController.text,
-        room: _selectedRoom,
-        fragile: _isFragile,
-        items: [],
-        createdAt: DateTime.now(),
+      if (_createNewCarton) {
+        final newCarton = Carton(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          name: _newCartonNameController.text.trim(),
+          room: _selectedRoom,
+          fragile: false,
+          items: [],
+          createdAt: DateTime.now(),
+        );
+        await cartonProvider.addCarton(newCarton);
+        targetCartonId = newCarton.id;
+      } else {
+        targetCartonId = _selectedCarton!.id;
+      }
+
+      final newItem = CartonItem(
+        id: DateTime.now().toIso8601String(),
+        cartonId: targetCartonId,
+        name: _itemNameController.text.trim(),
+        description: _itemDescController.text.trim(),
+        quantity: int.tryParse(_itemQtyController.text) ?? 1,
+        photo: _photoPath,
       );
-      await cartonProvider.addCarton(newCarton);
-      targetCartonId = newCarton.id;
-    } else {
-      if (_selectedCarton == null) return;
-      targetCartonId = _selectedCarton!.id;
+
+      await itemProvider.addItem(newItem);
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("L'objet '${newItem.name}' a été ajouté !"), 
+          backgroundColor: AppColors.success
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Erreur technique lors de l'ajout"), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-
-    // 2. Préparer l'objet
-    final newItem = CartonItem(
-      id: DateTime.now().toIso8601String(),
-      cartonId: targetCartonId,
-      name: _itemNameController.text,
-      description: _itemDescController.text,
-      photo: _photoPath,
-    );
-
-    // 3. Mettre à jour via le nouveau ItemProvider
-    await itemProvider.addItem(newItem);
-
-    if (!mounted) return;
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Objet '${newItem.name}' ajouté avec succès !"), backgroundColor: AppColors.success),
-    );
   }
 }

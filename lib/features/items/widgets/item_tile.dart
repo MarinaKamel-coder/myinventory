@@ -8,104 +8,123 @@ class ItemTile extends StatelessWidget {
     super.key,
     this.subtitle,
     this.imageUrl,
-    this.quantity,
+    this.quantity = 1, // Valeur par défaut
+    this.onTap,
   });
 
   final String title;
   final String? subtitle;
   final String? imageUrl;
   final int? quantity;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final imageProvider = buildPhotoImageProvider(imageUrl);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      padding: const EdgeInsets.all(12.0),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFDF8FF), // Fond très clair comme sur l'image
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          // ÉLÉMENT DE GAUCHE (Image ou Dégradé avec Nombre)
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              // Dégradé si pas d'image
-              gradient: imageProvider == null
-                  ? const LinearGradient(
-                      colors: [AppColors.fabStart, AppColors.fabEnd],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                  : null,
-              image: imageProvider != null
-                  ? DecorationImage(
-                      image: imageProvider,
-                      fit: BoxFit.cover,
-                    )
-                  : null,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 16.0),
+        padding: const EdgeInsets.all(12.0),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFDF8FF),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-            child: imageProvider == null && quantity != null
-                ? Center(
-                    child: Text(
-                      '$quantity',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
+          ],
+        ),
+        child: Row(
+          children: [
+            // IMAGE OU PLACEHOLDER AVEC BADGE QUANTITÉ
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 65,
+                  height: 65,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    gradient: imageProvider == null
+                        ? const LinearGradient(
+                            colors: [AppColors.fabStart, AppColors.fabEnd],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    image: imageProvider != null
+                        ? DecorationImage(image: imageProvider, fit: BoxFit.cover)
+                        : null,
+                  ),
+                  child: imageProvider == null
+                      ? const Icon(Icons.inventory_2_outlined, color: Colors.white, size: 28)
+                      : null,
+                ),
+                // BADGE DE QUANTITÉ (Toujours visible en haut à droite de l'image)
+                if (quantity != null && quantity! > 1)
+                  Positioned(
+                    right: -5,
+                    top: -5,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF7F56D9), // Couleur violette pro
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '$quantity',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 16),
-          
-          // TEXTES (Titre et Sous-titre dans sa bulle)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontSize: 18,
-                    color: const Color(0xFF262C35),
                   ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 8),
+              ],
+            ),
+            const SizedBox(width: 16),
+            // TEXTES
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF262C35),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: Colors.white.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      subtitle!,
+                      subtitle?.isNotEmpty == true ? subtitle! : "Aucune description",
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
+                        color: Colors.grey.shade600,
                         fontSize: 13,
                       ),
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+          ],
+        ),
       ),
     );
   }

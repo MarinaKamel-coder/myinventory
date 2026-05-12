@@ -1,4 +1,5 @@
-import 'package:barcode/barcode.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
@@ -10,15 +11,17 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
   final pdf = pw.Document();
   final dateStr = DateFormat('dd MMM yyyy').format(box.createdAt);
 
+  // Chargement du logo avec gestion d'erreur
   pw.MemoryImage? logoImage;
   try {
     final data = await rootBundle.load('assets/images/logo.png');
     logoImage = pw.MemoryImage(data.buffer.asUint8List());
-  } catch (_) {
+  } catch (e) {
+    debugPrint("Info: Logo non trouvé pour le PDF");
     logoImage = null;
   }
 
-  final qr = Barcode.qrCode();
+  // On tronque l'ID pour l'affichage visuel seulement
   final shortId = box.id.length > 16 ? '${box.id.substring(0, 16)}...' : box.id;
 
   pdf.addPage(
@@ -37,6 +40,7 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
             ),
             child: pw.Column(
               children: [
+                // En-tête de l'étiquette
                 pw.Container(
                   width: double.infinity,
                   padding: const pw.EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -53,7 +57,7 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
                       if (logoImage != null) pw.Image(logoImage, width: 24, height: 24),
                       if (logoImage != null) pw.SizedBox(width: 8),
                       pw.Text(
-                        'ETIQUETTE DE CARTON',
+                        'ÉTIQUETTE DE CARTON',
                         style: pw.TextStyle(
                           fontSize: 14,
                           fontWeight: pw.FontWeight.bold,
@@ -63,16 +67,19 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
                     ],
                   ),
                 ),
+                
                 pw.Padding(
                   padding: const pw.EdgeInsets.fromLTRB(18, 14, 18, 16),
                   child: pw.Column(
                     children: [
                       pw.Text(
-                        'Identification rapide du carton',
+                        'Identification rapide via QR Code',
                         style: pw.TextStyle(fontSize: 8.5, color: PdfColors.blueGrey500),
                       ),
                       pw.SizedBox(height: 12),
-                pw.Container(
+                      
+                      // QR CODE
+                      pw.Container(
                         width: 150,
                         height: 150,
                         padding: const pw.EdgeInsets.all(8),
@@ -82,12 +89,15 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
                           borderRadius: pw.BorderRadius.circular(6),
                         ),
                         child: pw.BarcodeWidget(
-                          barcode: qr,
-                          data: box.id,
+                          barcode: pw.Barcode.qrCode(),
+                          data: box.id, // L'ID complet pour le scan
                           drawText: false,
                         ),
                       ),
+                      
                       pw.SizedBox(height: 14),
+                      
+                      // Détails du carton
                       pw.Container(
                         width: double.infinity,
                         padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 9),
@@ -100,13 +110,14 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
                           children: [
                             _buildInfoLine('Nom du carton', box.name),
                             _buildLineSeparator(),
-                            _buildInfoLine('Piece', box.room.label),
+                            _buildInfoLine('Pièce', box.room.label),
                             _buildLineSeparator(),
                             _buildInfoLine('ID', shortId),
                             _buildLineSeparator(),
                             _buildInfoLine('Date', dateStr),
                             _buildLineSeparator(),
                             _buildInfoLine('Objets', '$itemCount', emphasizeValue: true),
+                            
                             if (box.fragile) ...[
                               pw.SizedBox(height: 6),
                               pw.Align(
@@ -131,14 +142,14 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
                           ],
                         ),
                       ),
+                      
                       pw.SizedBox(height: 12),
                       pw.Text(
-                        'MyINVENTORY - Carton de demenagement',
+                        'MyINVENTORY - Application de déménagement',
                         style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
                       ),
-                      pw.SizedBox(height: 2),
                       pw.Text(
-                        'Scanner le QR pour identifier le carton',
+                        'Scannez le QR pour voir le contenu complet',
                         style: pw.TextStyle(fontSize: 7.8, color: PdfColors.grey500),
                       ),
                     ],
@@ -151,7 +162,7 @@ Future<Uint8List> buildCartonLabelPdf(Carton box, {required int itemCount}) asyn
           pw.Align(
             alignment: pw.Alignment.centerRight,
             child: pw.Text(
-              'Genere le $dateStr',
+              'Généré le $dateStr',
               style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500),
             ),
           ),

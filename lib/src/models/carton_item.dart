@@ -1,11 +1,11 @@
 class CartonItem {
-
   factory CartonItem.fromMap(Map<String, dynamic> map) => CartonItem(
     id: map['id'] as String,
     cartonId: map['cartonId'] as String,
     name: map['name'] as String,
     description: map['description'] as String?,
     photo: map['photo'] as String?,
+    quantity: map['quantity'] as int? ?? 1,
   );
   const CartonItem({
     required this.id,
@@ -13,6 +13,7 @@ class CartonItem {
     required this.name,
     this.description,
     this.photo,
+    this.quantity = 1,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class CartonItem {
   final String name;
   final String? description;
   final String? photo;
+  final int quantity;
 
   CartonItem copyWith({
     String? id,
@@ -27,14 +29,15 @@ class CartonItem {
     String? name,
     String? description,
     String? photo,
-  }) =>
-      CartonItem(
-        id: id ?? this.id,
-        cartonId: cartonId ?? this.cartonId,
-        name: name ?? this.name,
-        description: description ?? this.description,
-        photo: photo ?? this.photo,
-      );
+    int? quantity,
+  }) => CartonItem(
+    id: id ?? this.id,
+    cartonId: cartonId ?? this.cartonId,
+    name: name ?? this.name,
+    description: description ?? this.description,
+    photo: photo ?? this.photo,
+    quantity: quantity ?? this.quantity,
+  );
 
   @override
   String toString() => 'CartonItem(id: $id, cartonId: $cartonId, name: $name)';
@@ -47,10 +50,12 @@ class CartonItem {
           other.cartonId == cartonId &&
           other.name == name &&
           other.description == description &&
-          other.photo == photo;
+          other.photo == photo &&
+          other.quantity == quantity;
 
   @override
-  int get hashCode => Object.hash(id, cartonId, name, description, photo);
+  int get hashCode =>
+      Object.hash(id, cartonId, name, description, photo, quantity);
 
   Map<String, dynamic> toMap() => {
     'id': id,
@@ -58,17 +63,19 @@ class CartonItem {
     'name': name,
     'description': description,
     'photo': photo,
+    'quantity': quantity,
   };
 }
 
 extension CartonItemSqlMapping on CartonItem {
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'cartonId': cartonId,
-        'name': name,
-        'description': description,
-        'photo': photo,
-      };
+    'id': id,
+    'cartonId': cartonId,
+    'name': name,
+    'description': description,
+    'photo': photo,
+    'quantity': quantity,
+  };
 
   static CartonItem fromMap(Map<String, dynamic> map) {
     return CartonItem(
@@ -77,7 +84,7 @@ extension CartonItemSqlMapping on CartonItem {
       name: map['name'] as String,
       description: map['description'] as String?,
       photo: map['photo'] as String?,
+      quantity: map['quantity'] as int? ?? 1,
     );
   }
 }
-
