@@ -1,5 +1,5 @@
 // ignore_for_file: prefer_expression_function_bodies
-
+import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supermoms/app/theme/app_colors.dart';
@@ -7,7 +7,7 @@ import 'package:supermoms/app/theme/app_text_styles.dart';
 import 'package:supermoms/features/navigation/screens/main_navigation_screen.dart'; // Import crucial pour la navigation
 import 'package:supermoms/shared/widgets/gradient_header.dart';
 import 'package:supermoms/src/models/room.dart';
-import 'package:supermoms/src/models/carton.dart'; 
+import 'package:supermoms/src/models/carton.dart';
 import 'package:supermoms/src/providers/auth_provider.dart';
 import 'package:supermoms/src/providers/carton_provider.dart';
 
@@ -24,7 +24,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadInitialData();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      unawaited(_loadInitialData());
+    });
   }
 
   /// Chargement sécurisé des données depuis SQLite
@@ -63,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildHeader(context, theme),
                 const SizedBox(height: 20),
-                
+
                 // --- BARRE DE RECHERCHE ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -71,7 +76,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     onChanged: (value) => provider.setSearchQuery(value),
                     decoration: const InputDecoration(
                       hintText: 'Rechercher un carton ou un objet...',
-                      prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ),
                 ),
@@ -108,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // --- SECTION DERNIERS CARTONS ---
                 _buildRecentSection(context, theme, provider, cartons),
-                
+
                 const SizedBox(height: 120),
               ],
             ),
@@ -119,7 +127,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecentSection(BuildContext context, ThemeData theme, CartonProvider provider, List<Carton> cartons) {
+  Widget _buildRecentSection(
+    BuildContext context,
+    ThemeData theme,
+    CartonProvider provider,
+    List<Carton> cartons,
+  ) {
     return Column(
       children: [
         Padding(
@@ -130,7 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
               Text('Derniers cartons', style: theme.textTheme.titleLarge),
               TextButton(
                 // Optionnel : Basculer vers l'onglet cartons (index 1) au lieu de pushNamed
-                onPressed: () => MainNavigationScreen.of(context)?.setState(() {}), 
+                onPressed: () =>
+                    MainNavigationScreen.of(context)?.setState(() {}),
                 child: const Text('Voir tout'),
               ),
             ],
@@ -147,12 +161,14 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text("Aucun carton trouvé"),
           )
         else
-          ...cartons.take(5).map((Carton box) { 
+          ...cartons.take(5).map((Carton box) {
             String? foundItem;
             if (provider.searchQuery.isNotEmpty) {
-              final match = box.items.where((item) => item.name
-                  .toLowerCase()
-                  .contains(provider.searchQuery.toLowerCase()));
+              final match = box.items.where(
+                (item) => item.name.toLowerCase().contains(
+                  provider.searchQuery.toLowerCase(),
+                ),
+              );
               if (match.isNotEmpty) foundItem = match.first.name;
             }
             return _buildCartonItem(
@@ -161,8 +177,11 @@ class _HomeScreenState extends State<HomeScreen> {
               _getTotalItemsInBox(box),
               box.fragile,
               // CORRECTION ICI : Utilisation de la navigation globale pour garder la navbar
-              () => MainNavigationScreen.of(context)?.navigateToCartonDetail(box),
-              subtitleAddition: foundItem != null ? 'Contient : $foundItem' : null,
+              () =>
+                  MainNavigationScreen.of(context)?.navigateToCartonDetail(box),
+              subtitleAddition: foundItem != null
+                  ? 'Contient : $foundItem'
+                  : null,
             );
           }),
       ],
@@ -207,7 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         'assets/images/logo.png',
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.inventory, size: 40, color: AppColors.headerMid),
+                            const Icon(
+                              Icons.inventory,
+                              size: 40,
+                              color: AppColors.headerMid,
+                            ),
                       ),
                     ),
                   ),
@@ -264,21 +287,34 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text("Déconnexion"),
         content: const Text("Voulez-vous vraiment vous déconnecter ?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Annuler"),
+          ),
           TextButton(
             onPressed: () async {
               await context.read<AuthProvider>().signOut();
               if (!mounted) return;
-              Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/', (route) => false);
             },
-            child: const Text("Déconnexion", style: TextStyle(color: Colors.red)),
+            child: const Text(
+              "Déconnexion",
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatCard(String value, String label, Color color, IconData icon) {
+  Widget _buildStatCard(
+    String value,
+    String label,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -290,18 +326,27 @@ class _HomeScreenState extends State<HomeScreen> {
           Icon(icon, color: Colors.white, size: 30),
           const SizedBox(height: 10),
           Text(value, style: AppTextStyles.statsNumber),
-          Text(label,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCartonItem(String title, Room room, int itemsCount, bool isFragile, VoidCallback onTap,
-      {String? subtitleAddition}) {
+  Widget _buildCartonItem(
+    String title,
+    Room room,
+    int itemsCount,
+    bool isFragile,
+    VoidCallback onTap, {
+    String? subtitleAddition,
+  }) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -310,25 +355,34 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-              gradient: AppColors.mainGradient,
-              borderRadius: BorderRadius.circular(12)),
+            gradient: AppColors.mainGradient,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Text(room.icon, style: const TextStyle(fontSize: 24)),
         ),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${room.label} • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}'),
+            Text(
+              '${room.label} • $itemsCount ${itemsCount > 1 ? 'objets' : 'objet'}',
+            ),
             if (subtitleAddition != null)
-              Text(subtitleAddition,
-                  style: const TextStyle(
-                      color: AppColors.statsBlue,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12)),
+              Text(
+                subtitleAddition,
+                style: const TextStyle(
+                  color: AppColors.statsBlue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
           ],
         ),
         trailing: isFragile
-            ? const Icon(Icons.warning_amber_rounded, color: AppColors.statsOrange)
+            ? const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.statsOrange,
+              )
             : const Icon(Icons.chevron_right),
       ),
     );
