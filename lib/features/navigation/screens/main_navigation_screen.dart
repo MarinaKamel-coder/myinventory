@@ -26,11 +26,9 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
   final GlobalKey<NavigatorState> _cartonsNavKey = GlobalKey<NavigatorState>();
 
   /// Fonction pour naviguer vers un carton depuis n'importe où
-  void navigateToCartonDetail(Carton box) {
-    // 1. On bascule sur l'onglet "Cartons" (index 1)
+void navigateToCartonDetail(Carton box) {
     setState(() => _currentIndex = 1);
     
-    // 2. On attend que l'onglet soit affiché pour pousser l'écran de détail
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_cartonsNavKey.currentState != null) {
         _cartonsNavKey.currentState!.push(
@@ -40,6 +38,11 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
         );
       }
     });
+  }
+
+  /// CHANGER D'ONGLET UNIQUEMENT (AJOUTE CECI ICI)
+  void setSelectedIndex(int index) {
+    setState(() => _currentIndex = index);
   }
 
   @override

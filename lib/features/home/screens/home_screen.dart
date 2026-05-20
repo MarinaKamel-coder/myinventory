@@ -142,9 +142,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text('Derniers cartons', style: theme.textTheme.titleLarge),
               TextButton(
-                // Optionnel : Basculer vers l'onglet cartons (index 1) au lieu de pushNamed
-                onPressed: () =>
-                    MainNavigationScreen.of(context)?.setState(() {}),
+                onPressed: () {
+                  // Te dirige maintenant parfaitement vers l'onglet CartonListScreen (index 1)
+                  MainNavigationScreen.of(context)?.setSelectedIndex(1);
+                },
                 child: const Text('Voir tout'),
               ),
             ],
