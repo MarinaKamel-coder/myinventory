@@ -18,17 +18,18 @@ class MainNavigationScreen extends StatefulWidget {
   State<MainNavigationScreen> createState() => MainNavigationScreenState();
 }
 
-// NOTE: La classe est publique (pas de _) pour être accessible par .of(context)
 class MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
   
   // Clé pour contrôler le Navigator interne de l'onglet Cartons
   final GlobalKey<NavigatorState> _cartonsNavKey = GlobalKey<NavigatorState>();
 
-  /// Fonction pour naviguer vers un carton depuis n'importe où
-void navigateToCartonDetail(Carton box) {
+  /// Fonction pour naviguer vers le DÉTAIL d'un carton spécifique depuis l'accueil
+  void navigateToCartonDetail(Carton box) {
+    // 1. On bascule sur l'onglet "Cartons" (index 1)
     setState(() => _currentIndex = 1);
     
+    // 2. On attend que l'onglet soit affiché pour pousser l'écran de détail
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_cartonsNavKey.currentState != null) {
         _cartonsNavKey.currentState!.push(
@@ -40,7 +41,7 @@ void navigateToCartonDetail(Carton box) {
     });
   }
 
-  /// CHANGER D'ONGLET UNIQUEMENT (AJOUTE CECI ICI)
+  /// CHANGER D'ONGLET UNIQUEMENT (Idéal pour le bouton "Voir tout")
   void setSelectedIndex(int index) {
     setState(() => _currentIndex = index);
   }
